@@ -1,0 +1,13 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/PolygonDrawTool/Scripts/Draw.cs">
+    <Files>
+      <File FileName="Assets/PolygonDrawTool/Scripts/Draw.cs" Line="406" Column="1" />
+      <File FileName="Assets/PolygonDrawTool/Scripts/Triangulator.cs" Line="87" Column="4" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
