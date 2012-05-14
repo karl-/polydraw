@@ -73,7 +73,6 @@ public class Triangulator
         return Mathf.Abs( (A * 0.5f) );
     }
 	
-	/*
 	public static float Area (Vector2[] points) {
         int n = points.Length;
         float A = 0.0f;
@@ -84,7 +83,7 @@ public class Triangulator
         }
         return (A * 0.5f);
     }
-	*/
+	
     private bool Snip (int u, int v, int w, int n, int[] V) {
         int p;
         Vector2 A = m_points[V[u]];
