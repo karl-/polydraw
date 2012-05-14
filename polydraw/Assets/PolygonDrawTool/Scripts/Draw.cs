@@ -33,11 +33,13 @@ public class Draw : MonoBehaviour {
 	public bool generateCollider = true;
 	public bool forceConvex = false;
 	public bool applyRigidbody = true;
+	public bool areaRelativeMass = true;
+	public float massModifier = 1f;
 	public float mass = 25f;
 	public bool useGravity = true;
 	public bool isKinematic = false;
 	public bool useTag = false;
-	public string tag = "drawnMesh";
+	public string tagVal = "drawnMesh";
 	public float zPosition = 0;
 	public Vector2 uvScale = new Vector2(1f, 1f);
 	
@@ -291,6 +293,12 @@ public class Draw : MonoBehaviour {
 		}
 		ChechMaxMeshes();
 		
+		// Check for self intesection 
+		if(SelfIntersectTest(new List<Vector2>(points))) {
+			CleanUp();
+			return;
+		}
+
 		Polygon convexity = Convexity(points);
 
 		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
@@ -352,7 +360,7 @@ public class Draw : MonoBehaviour {
 		
 		GameObject f_go = new GameObject();
 		if(useTag)
-			f_go.tag = tag;		
+			f_go.tag = tagVal;		
 		f_go.AddComponent<MeshFilter>();
 		f_go.GetComponent<MeshFilter>().sharedMesh = new Mesh();
 		Mesh mesh = f_go.GetComponent<MeshFilter>().sharedMesh;
@@ -382,7 +390,11 @@ public class Draw : MonoBehaviour {
 				else
 					f_go.GetComponent<MeshCollider>().convex = true;
 
-				rigidbody.mass = 25f;
+				if(areaRelativeMass)
+					rigidbody.mass = Triangulator.Area(points) * massModifier;
+				else
+					rigidbody.mass = mass;
+
 				rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezePositionZ;
 				
 				if(useGravity)
@@ -413,7 +425,6 @@ public class Draw : MonoBehaviour {
 		return uvs;
 	}
 	
-	
 	// http://paulbourke.net/geometry/clockwise/index.html
 	Polygon Convexity(Vector2[] p)
 	{
@@ -442,20 +453,69 @@ public class Draw : MonoBehaviour {
 			if (flag == 3)
 				isConcave = true;
 		}
-		
+
 		if(isConcave == true || flag == 0) 
 		{
-			if(wind >= 0)
+			if(wind > -1)
 				return Polygon.ConcaveCounterClockwise;
 			else
 				return Polygon.ConcaveClockwise;
 		}
 		else
 		{
-			if(wind >= 0)
+			if(wind > -1)
 				return(Polygon.ConvexCounterClockwise);
 			else
 				return(Polygon.ConvexClockwise);
 		}
+	}
+
+	// http://www.gamedev.net/topic/548477-fast-2d-polygon-self-intersect-test/
+	public bool SelfIntersectTest(List<Vector2> vertices)
+	{
+	    for (int i = 0; i < vertices.Count; ++i)
+	    {
+	        if (i < vertices.Count - 1)
+	        {
+	            for (int h = i + 1; h < vertices.Count; ++h)
+	            {
+	                // Do two vertices lie on top of one another?
+	                if (vertices[i] == vertices[h])
+	                {
+	                    return true;
+	                }
+	            }
+	        }
+
+	        int j = (i + 1) % vertices.Count;
+	        Vector2 iToj = vertices[j] - vertices[i];
+	        Vector2 iTojNormal = new Vector2(iToj.y, -iToj.x);
+	        // i is the first vertex and j is the second
+	        int startK = (j + 1) % vertices.Count;
+	        int endK = (i - 1 + vertices.Count) % vertices.Count;
+	        endK += startK < endK ? 0 : startK + 1;
+	        int k = startK;
+	        Vector2 iTok = vertices[k] - vertices[i];
+	        bool onLeftSide = Vector2.Dot(iTok, iTojNormal) >= 0;
+	        Vector2 prevK = vertices[k];
+	        ++k;
+	        for (; k <= endK; ++k)
+	        {
+	            int modK = k % vertices.Count;
+	            iTok = vertices[modK] - vertices[i];
+	            if (onLeftSide != Vector2.Dot(iTok, iTojNormal) >= 0)
+	            {
+	                Vector2 prevKtoK = vertices[modK] - prevK;
+	                Vector2 prevKtoKNormal = new Vector2(prevKtoK.y, -prevKtoK.x);
+	                if ((Vector2.Dot(vertices[i] - prevK, prevKtoKNormal) >= 0) != (Vector2.Dot(vertices[j] - prevK, prevKtoKNormal) >= 0))
+	                {
+	                    return true;
+	                }
+	            }
+	            onLeftSide = Vector2.Dot(iTok, iTojNormal) > 0;
+	            prevK = vertices[modK];
+	        }
+	    }
+	    return false;
 	}
 }
