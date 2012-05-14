@@ -2,18 +2,18 @@
 /// Draws a mesh from user input.
 /// 
 /// Known Issues:
-/// -	Overlapping vertices will cause mesh's winding order to reverse.
 /// -	No hole support.
 /// 
 /// </summary>
 
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
 public class Draw : MonoBehaviour {
 
-	List<Vector2> user_points = new List<Vector2>();
+	List<Vector2> userPoints = new List<Vector2>();
 	
 	/// <summary>
 	/// User Settings
@@ -43,16 +43,18 @@ public class Draw : MonoBehaviour {
 	/// <summary>
 	/// Internal
 	/// </summary>
-	bool placing_point = false;
-	Vector3 prev_mouse_position;
+	bool placingPoint = false;
+	Vector3 previousMousePosition;
 	private float timer = 0f;
 	private List<GameObject> generatedMeshes = new List<GameObject>();
 	private int windingOrder; // Positive = CC , Negative = CW
 	enum Polygon {
-		Convex,
-		Concave
+		ConvexClockwise,
+		ConvexCounterClockwise,
+		ConcaveClockwise,
+		ConcaveCounterClockwise
 	}
-	Camera m_camera;
+	Camera mainCamera;
 
 	public enum DrawStyle {
 		Continuous,
@@ -62,7 +64,7 @@ public class Draw : MonoBehaviour {
 	}
 	
 	void Start() {
-		m_camera = Camera.main;
+		mainCamera = Camera.main;
 	}
 	
 	/// <summary>
@@ -78,35 +80,35 @@ public class Draw : MonoBehaviour {
 		
 		if(drawStyle == DrawStyle.Point_MaxVertice || drawStyle == DrawStyle.Point_ClosingDistance) {
 			if(Input.GetMouseButtonDown(0)) {
-				Vector3 world_pos = m_camera.ScreenToWorldPoint(Input.mousePosition);
-				world_pos = new Vector3(world_pos.x, world_pos.y, zPosition);
+				Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+				worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
-				DrawLineRenderer(user_points.ToArray());
+				DrawLineRenderer(userPoints.ToArray());
 				
-				addPoint(world_pos);
+				AddPoint(worldPos);
 				
-				placing_point = true;
+				placingPoint = true;
 			}
 			
-			if(Input.mousePosition != prev_mouse_position && placing_point) {			
-				prev_mouse_position = Input.mousePosition;
-				Vector3 world_pos = m_camera.ScreenToWorldPoint(Input.mousePosition);
-				world_pos = new Vector3(world_pos.x, world_pos.y, zPosition);
+			if(Input.mousePosition != previousMousePosition && placingPoint) {			
+				previousMousePosition = Input.mousePosition;
+				Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+				worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 				
-				user_points[user_points.Count - 1]  = world_pos;
-				refreshPreview();
+				userPoints[userPoints.Count - 1]  = worldPos;
+				RefreshPreview();
 			}
 	
 			if(Input.GetMouseButtonUp(0)) {
-				placing_point = false;
+				placingPoint = false;
 				
-				if(drawStyle == DrawStyle.Point_ClosingDistance && user_points.Count > 2) {
-					if( (user_points[0] - user_points[user_points.Count - 1]).sqrMagnitude < (closingDistance) )
-						DrawFinalMesh(user_points.ToArray());
+				if(drawStyle == DrawStyle.Point_ClosingDistance && userPoints.Count > 2) {
+					if( (userPoints[0] - userPoints[userPoints.Count - 1]).sqrMagnitude < (closingDistance) )
+						DrawFinalMesh(userPoints.ToArray());
 				}
 		
-				if(user_points.Count > maxVertices && drawStyle == DrawStyle.Point_MaxVertice)
-					DrawFinalMesh(user_points.ToArray());
+				if(userPoints.Count > maxVertices && drawStyle == DrawStyle.Point_MaxVertice)
+					DrawFinalMesh(userPoints.ToArray());
 			}
 		}
 		else
@@ -118,17 +120,17 @@ public class Draw : MonoBehaviour {
 					
 					// The triangulation algorithm in use doesn't like multiple verts
 					// sharing the same world space, so don't let it happen!
-					if(Input.mousePosition != prev_mouse_position) {			
-						prev_mouse_position = Input.mousePosition;
+					if(Input.mousePosition != previousMousePosition) {			
+						previousMousePosition = Input.mousePosition;
 						
-						Vector3 world_pos = m_camera.ScreenToWorldPoint(Input.mousePosition);
-						world_pos = new Vector3(world_pos.x, world_pos.y, zPosition);
+						Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+						worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 					
-						addPoint(world_pos);
+						AddPoint(worldPos);
 						
-						if(drawStyle == DrawStyle.Continuous_ClosingDistance && user_points.Count > 2) {
-							if( (user_points[0] - user_points[user_points.Count - 1]).sqrMagnitude < (closingDistance) )
-								DrawFinalMesh(user_points.ToArray());
+						if(drawStyle == DrawStyle.Continuous_ClosingDistance && userPoints.Count > 2) {
+							if( (userPoints[0] - userPoints[userPoints.Count - 1]).sqrMagnitude < (closingDistance) )
+								DrawFinalMesh(userPoints.ToArray());
 						}//drawstyle
 					}//mousepos check
 				}//mousedown			
@@ -137,9 +139,9 @@ public class Draw : MonoBehaviour {
 			}
 			
 			if(Input.GetMouseButtonUp(0)) {
-				DrawFinalMesh(user_points.ToArray());
-				destroyTempGameObject();
-				destroyLineRenderer();
+				DrawFinalMesh(userPoints.ToArray());
+				DestroyTempGameObject();
+				DestroyLineRenderer();
 			}
 		}
 	}
@@ -168,34 +170,34 @@ public class Draw : MonoBehaviour {
 		}
 	}
 	
-	void cleanUp() {
-		user_points.Clear();
-		destroyLineRenderer();
-		destroyTempGameObject();
+	void CleanUp() {
+		userPoints.Clear();
+		DestroyLineRenderer();
+		DestroyTempGameObject();
 	}
 	
-	void destroyLineRenderer() {
+	void DestroyLineRenderer() {
 		if(gameObject.GetComponent<LineRenderer>() != null)
 			Destroy(gameObject.GetComponent<LineRenderer>());
 	}
 	
-	void addPoint(Vector3 position) {
-		user_points.Add(position);
+	void AddPoint(Vector3 position) {
+		userPoints.Add(position);
 		
-		if(user_points.Count > 1) {
+		if(userPoints.Count > 1) {
 			if(drawMeshInProgress)
-				DrawTempMesh(user_points.ToArray());
+				DrawTempMesh(userPoints.ToArray());
 			
-			DrawLineRenderer(user_points.ToArray());
+			DrawLineRenderer(userPoints.ToArray());
 		}
 	}
 	
-	void refreshPreview() {
-		if(user_points.Count > 1) {			
+	void RefreshPreview() {
+		if(userPoints.Count > 1) {			
 			if(drawMeshInProgress)
-				DrawTempMesh(user_points.ToArray());
+				DrawTempMesh(userPoints.ToArray());
 
-			DrawLineRenderer(user_points.ToArray());
+			DrawLineRenderer(userPoints.ToArray());
 		}
 	}
 	
@@ -206,11 +208,14 @@ public class Draw : MonoBehaviour {
 	Mesh mesh;
 	void DrawTempMesh(Vector2[] points) {		
 		if( points.Length < 2 ) {
-			cleanUp();
+			CleanUp();
 			return;
 		}
 		
-		// check winding order here
+		Polygon convexity = Convexity(points);
+
+		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
+			Array.Reverse(points);
 		
 		// Use the triangulator to get indices for creating triangles
         Triangulator tr = new Triangulator(points);
@@ -243,7 +248,7 @@ public class Draw : MonoBehaviour {
 		go.GetComponent<MeshRenderer>().material = material;
 	}
 	
-	void destroyTempGameObject() 
+	void DestroyTempGameObject() 
 	{
 		if(go)
 			Destroy(go);
@@ -263,10 +268,9 @@ public class Draw : MonoBehaviour {
 	{
 		for(int i = 0; i < generatedMeshes.Count; i++)
 		{
-			GameObject g = generatedMeshes[i];
-			generatedMeshes.RemoveAt(i);
-			Destroy(g);
+			Destroy(generatedMeshes[i]);
 		}
+		generatedMeshes.Clear();
 	}
 	
 	/// <summary>
@@ -276,15 +280,17 @@ public class Draw : MonoBehaviour {
 	/// Points.
 	/// </param>
 	void DrawFinalMesh(Vector2[] points) {
-		destroyTempGameObject();
+		DestroyTempGameObject();
 		if(points.Length < 3 || ((points[0] - points[points.Length - 1]).sqrMagnitude > (closingDistance) && useDistanceCheck) ) {
-			cleanUp();	
+			CleanUp();	
 			return;
 		}
 		checkMaxMeshes();
+		
+		Polygon convexity = Convexity(points);
 
-		Debug.Log (Convex(points).ToString());
-		Debug.Log("-------");
+		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
+			Array.Reverse(points);
 
         Triangulator tr = new Triangulator(points);
         int[] front_indices = tr.Triangulate();
@@ -309,7 +315,7 @@ public class Draw : MonoBehaviour {
 		// +6 connects it to the first 2 verts
 		int[] side_indices = new int[(side_vertices.Count*3)];
 		
-		windingOrder = 0; // assume clockwise
+		windingOrder = 1; // assume counter-clockwise
 		
 		int v = 0;
 		for(int i = 0; i < side_indices.Length - 6; i+=3)
@@ -365,12 +371,12 @@ public class Draw : MonoBehaviour {
 			if(applyRigidbody)
 			{
 				Rigidbody rigidbody = f_go.AddComponent<Rigidbody>();
-/*				
-				if(Convex(points) == 0 && forceConvex == false)
+			
+				if( (convexity == Polygon.ConcaveCounterClockwise || convexity == Polygon.ConcaveClockwise) && forceConvex == false)
 					f_go.GetComponent<MeshCollider>().convex = false;
 				else
 					f_go.GetComponent<MeshCollider>().convex = true;
-*/
+
 				rigidbody.mass = 25f;
 				rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezePositionZ;
 				
@@ -386,7 +392,7 @@ public class Draw : MonoBehaviour {
 			}
 		}
 		generatedMeshes.Add (f_go);
-		cleanUp();
+		CleanUp();
 	}
 	
 	/// <summary>
@@ -403,11 +409,14 @@ public class Draw : MonoBehaviour {
 	}
 	
 	
-	//http://paulbourke.net/geometry/clockwise/index.html
-	Polygon Convex(Vector2[] p)
+	// http://paulbourke.net/geometry/clockwise/index.html
+	Polygon Convexity(Vector2[] p)
 	{
+		bool isConcave = false;
+		
 		int n = p.Length;
 	   	int i,j,k;
+		double wind = 0;
 		int flag = 0;
 		double z;
 		
@@ -419,21 +428,29 @@ public class Draw : MonoBehaviour {
 			k = (i + 2) % n;
 			z  = (p[j].x - p[i].x) * (p[k].y - p[j].y);
 			z -= (p[j].y - p[i].y) * (p[k].x - p[j].x);
-
+			wind += z;
 			if (z < 0)
 				flag |= 1;
 			else if (z > 0)
 				flag |= 2;
-			
-			Debug.Log (z + "  " + flag);
-
+						
 			if (flag == 3)
-				return(Polygon.Concave);
+				isConcave = true;
 		}
-
-		if (flag != 0)
-			return(Polygon.Convex);
+		
+		if(isConcave == true || flag == 0) 
+		{
+			if(wind >= 0)
+				return Polygon.ConcaveCounterClockwise;
+			else
+				return Polygon.ConcaveClockwise;
+		}
 		else
-			return(0);
+		{
+			if(wind >= 0)
+				return(Polygon.ConvexCounterClockwise);
+			else
+				return(Polygon.ConvexClockwise);
+		}
 	}
 }

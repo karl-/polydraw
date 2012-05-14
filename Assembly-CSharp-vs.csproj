@@ -46,8 +46,6 @@
   <ItemGroup>
      <Compile Include="Assets\PolygonDrawTool\Scripts\Draw.cs" />
      <Compile Include="Assets\PolygonDrawTool\Scripts\Triangulator.cs" />
-     <Compile Include="Assets\load.cs" />
-     <None Include="Assets\PolygonDrawTool\Shaders\UnlitColor.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
