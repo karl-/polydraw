@@ -39,6 +39,7 @@ public class Draw : MonoBehaviour {
 	public bool useTag = false;
 	public string tag = "drawnMesh";
 	public float zPosition = 0;
+	public Vector2 uvScale = new Vector2(1f, 1f);
 	
 	/// <summary>
 	/// Internal
@@ -213,7 +214,10 @@ public class Draw : MonoBehaviour {
 		}
 		
 		Polygon convexity = Convexity(points);
-
+		
+		// This should probably be accounted for in the Triangulation method using a more
+		// reliable fill algorithm, but for non-intersecting geometry this works adequately 
+		// well.
 		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
 			Array.Reverse(points);
 		
@@ -239,7 +243,7 @@ public class Draw : MonoBehaviour {
 		mesh.Clear();
 		mesh.vertices = vertices;
         mesh.triangles = indices;
-		mesh.uv = CalculateUVs(vertices, new Vector2(1f, 1f));
+		mesh.uv = CalculateUVs(vertices, uvScale);
 		mesh.RecalculateNormals();
         mesh.RecalculateBounds();
        
@@ -254,7 +258,7 @@ public class Draw : MonoBehaviour {
 			Destroy(go);
 	}
 	
-	void checkMaxMeshes() 
+	void ChechMaxMeshes() 
 	{
 		if(generatedMeshes.Count >= maxAllowedObjects && maxAllowedObjects > 0)
 		{
@@ -285,13 +289,14 @@ public class Draw : MonoBehaviour {
 			CleanUp();	
 			return;
 		}
-		checkMaxMeshes();
+		ChechMaxMeshes();
 		
 		Polygon convexity = Convexity(points);
 
 		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
 			Array.Reverse(points);
-
+		
+		/*** Generate Front Face ***/
         Triangulator tr = new Triangulator(points);
         int[] front_indices = tr.Triangulate();
        
@@ -356,7 +361,7 @@ public class Draw : MonoBehaviour {
 		mesh.Clear();
 		mesh.vertices = all_vertices.ToArray();
         mesh.triangles = all_indices.ToArray();
-		mesh.uv = CalculateUVs(all_vertices.ToArray(), new Vector2(1f, 1f));
+		mesh.uv = CalculateUVs(all_vertices.ToArray(), uvScale);
 		mesh.RecalculateNormals();
         mesh.RecalculateBounds();
        
@@ -403,7 +408,7 @@ public class Draw : MonoBehaviour {
 		Vector2[] uvs = new Vector2[v.Length];
 		for(var i = 0; i < v.Length; i++)
 		{
-			uvs[i] = new Vector2( (v[i].x * .01f), (v[i].y * .01f));
+			uvs[i] = new Vector2( (v[i].x * uvScale.x), (v[i].y * uvScale.y));
 		}
 		return uvs;
 	}
