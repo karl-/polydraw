@@ -215,7 +215,7 @@ public class Draw : MonoBehaviour {
 			return;
 		}
 		
-		Polygon convexity = Convexity(points);
+		Polygon convexity = Convexity(points, false);
 		
 		// This should probably be accounted for in the Triangulation method using a more
 		// reliable fill algorithm, but for non-intersecting geometry this works adequately 
@@ -299,7 +299,7 @@ public class Draw : MonoBehaviour {
 			return;
 		}
 
-		Polygon convexity = Convexity(points);
+		Polygon convexity = Convexity(points, true);
 
 		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
 			Array.Reverse(points);
@@ -426,8 +426,9 @@ public class Draw : MonoBehaviour {
 	}
 	
 	// http://paulbourke.net/geometry/clockwise/index.html
-	Polygon Convexity(Vector2[] p)
+	Polygon Convexity(Vector2[] p, bool final)
 	{
+		string cheese = "";
 		bool isConcave = false;
 		
 		int n = p.Length;
@@ -452,22 +453,30 @@ public class Draw : MonoBehaviour {
 						
 			if (flag == 3)
 				isConcave = true;
-		}
 
+			cheese += z + "		" + flag + "\n";
+		}
+		
+		Polygon convexity;
 		if(isConcave == true || flag == 0) 
 		{
-			if(wind > -1)
-				return Polygon.ConcaveCounterClockwise;
+			if(wind > 0)
+				convexity = Polygon.ConcaveCounterClockwise;
 			else
-				return Polygon.ConcaveClockwise;
+				convexity = Polygon.ConcaveClockwise;
 		}
 		else
 		{
-			if(wind > -1)
-				return(Polygon.ConvexCounterClockwise);
+			if(wind > 0)
+				convexity = Polygon.ConvexCounterClockwise;
 			else
-				return(Polygon.ConvexClockwise);
+				convexity = Polygon.ConvexClockwise;
 		}
+
+		if(final)
+			Debug.Log(convexity + "\n" + "winding  " + wind + "\n" + cheese);
+
+		return convexity;
 	}
 
 	// http://www.gamedev.net/topic/548477-fast-2d-polygon-self-intersect-test/
