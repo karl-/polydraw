@@ -1,0 +1,33 @@
+<strong>PolyDraw</strong>
+<br>
+<br>
+<em>Draw 2d mesh polygons in real time!</em>
+<br>
+<STRONG>Features</STRONG>
+<br>
+- 4 Different Drawing Methods
+<br>
+- Apply area proportional mass
+<br>
+- Editor script included to clean up the interface
+<br>
+- Generate colliders, or don't!
+<br>
+<br>
+<em>Draw Method Explanations:</em>
+<br />
+<strong>Continuous</STRONG>
+<br />
+	- Click and draw.  As long as the mouse is held down, you'll keep adding points.
+<br /><br />
+<STRONG>Continuous Closing Point</STRONG>
+<br />
+	- Click and draw, but once you place a point within X distance of the origin point the polygon will finalize. (X is user modifiable, of course!)
+<br /><br />
+<STRONG>Line Max Vertice</STRONG>
+<br />
+	- Click to place points, and once the max amount of points has been set (user defined!) the polygon will finalize.
+<br /><br />
+<STRONG>Line Closing Distance</STRONG>
+<br />
+	- Similar to Line Max Vertice, except not vertice limit.  Polygon finalizes when a vertice is placed close enough to the origin point.
