@@ -65,13 +65,13 @@ public class DrawEditor : Editor {
 		
 		script.uvScale = EditorGUILayout.Vector2Field("UV Scale", script.uvScale);
 
-		script.useTag = EditorGUILayout.BeginToggleGroup("Apply Tag", script.useTag);
+		script.useTag = EditorGUILayout.BeginToggleGroup(new GUIContent("Apply Tag", "Tag must exist prior to assignment."), script.useTag);
 			script.tagVal = EditorGUILayout.TextField("Tag", script.tagVal);
 		EditorGUILayout.EndToggleGroup();
 		
 		script.maxAllowedObjects = EditorGUILayout.IntField("Max Meshes Allowed", script.maxAllowedObjects);
 
-		script.colliderStyle = (Draw.ColliderStyle)EditorGUILayout.EnumPopup("Collison", script.colliderStyle);
+		script.colliderStyle = (Draw.ColliderStyle)EditorGUILayout.EnumPopup(new GUIContent("Collison", "If set to mesh, a Mesh Collider will be applied.  If set to Box, a series of thin box colliders will be generated bordering the edges, allowing for concave interactions.  None means no collider will be applied."), script.colliderStyle);
 
 		switch(script.colliderStyle) {
 			case Draw.ColliderStyle.BoxCollider:

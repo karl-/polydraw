@@ -52,6 +52,10 @@ To use in a scene, follow these quick steps:
 				- Mass
 	h. Mesh Name
 
+3. Other
+	a. IgnoreRect(Rect rect)
+	b. ClearIgnoreRects()
+	c. ExportOBJ()
 
 0.a Continuous
 	While the mouse is held down points will continue to be added to the mesh.  Once the mouse is let up, the mesh will close itself and attempt to triagulate.  If there are intersecting edges, the mesh will not be finalized.
@@ -155,3 +159,25 @@ o.d Point Closing Distance
 
 	h. Mesh Name
 		The name to be applied to the final gameobject.
+
+3. Other
+	a. IgnoreRect(Rect rect)
+		Call this to add a rect (in screen space!) to the ignore list.  For instance, if your GUI is in the top left, and you don't want the user to be able to draw meshes in this area, add a rect containing the GUI area to the ignore list.
+
+	b. ClearIgnoreRects()
+		Call this to clear the ignore list.
+
+	c. ExportOBJ()
+		Note- Meshes with the same name will not be overwritten, but an integer will appended.  You may need to refresh your asset library to view exported meshes (Ctrl-r or Cmd-R on Mac).  Path is absolute, or relative if in Editor.  Check the Demo.cs script for an example of both standalone and in editor usage.  All overloads return the path of the last exported object.
+
+		ExportOBJ(string path)
+			- Export all generated meshes.
+
+		ExportOBJ(string path, int index)
+			- Export mesh at index of generated meshes
+
+		ExportOBJ(string path, GameObject go)
+			- Export mesh attached to gameobject.
+
+		ExportCurrent(string path)
+			- Export the last mesh drawn.
