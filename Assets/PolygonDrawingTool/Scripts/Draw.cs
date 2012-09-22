@@ -2,7 +2,7 @@
 /// Parabox LLC 
 /// Support Email - karl@paraboxstudios.com
 /// paraboxstudios.com
-///	## Version 1.3
+///	## Version 1.4
 ///
 /// Draws a mesh from user input.
 /// 
@@ -18,6 +18,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 public class Draw : MonoBehaviour {
 
@@ -41,6 +42,7 @@ public class Draw : MonoBehaviour {
 	public bool showPointMarkers = false;
 	public GameObject pointMarker;
 	private List<GameObject> pointMarkers = new List<GameObject>();
+	private List<Rect> ignoreRect = new List<Rect>();
 
 	///Final Mesh Settings
 	public Material material;
@@ -78,7 +80,6 @@ public class Draw : MonoBehaviour {
 		ConcaveCounterClockwise
 	}
 	Camera mainCamera;
-	private bool debug = false;
 
 	public enum DrawStyle {
 		Continuous,
@@ -98,10 +99,12 @@ public class Draw : MonoBehaviour {
 	}
 
 	void Update() {
-		// If mouse is over in the GUI, don't affect  mesh drawing.
-		if(debug) {
-			if(Input.mousePosition.x <= 250)
-				return;
+		// If mouse is in an ignoreRect, don't affect  mesh drawing.
+		if(ignoreRect.Count > 0) {
+			foreach(Rect r in ignoreRect) {
+				if(r.Contains(Input.mousePosition))
+					return;
+			}
 		}
 
 		if(drawStyle == DrawStyle.PointMaxVertice || drawStyle == DrawStyle.PointClosingDistance) {
@@ -531,7 +534,7 @@ public class Draw : MonoBehaviour {
 
 					GameObject go = new GameObject();
 					go.name = "BoxCollider" + i;
-					BoxCollider bc = go.AddComponent<BoxCollider>();
+					go.AddComponent<BoxCollider>();
 					
 					go.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
 
@@ -555,7 +558,66 @@ public class Draw : MonoBehaviour {
 		generatedMeshes.Add (f_go);
 		CleanUp();
 	}
-	
+
+	///	<summary>
+	///	OBJ Export methods
+	///	</summary>
+	public string ExportOBJ(string path, MeshFilter mf)
+	{
+		if(File.Exists(path)) {
+			int i = 0;
+			while(File.Exists(path)) {
+				path = path.Replace(".obj","");
+				path = path + i + ".obj";
+				i++;
+			}
+		}
+		ObjExporter.MeshToFile(mf, path);
+		return path;
+	}
+
+	// Export all meshes
+	public string ExportOBJ(string path)
+	{
+		for(int i = 0; i < generatedMeshes.Count; i++)
+			ExportOBJ(path, i);
+		
+		return path;
+	}
+
+	public string ExportOBJ(string path, int index)
+	{
+		if(index < generatedMeshes.Count)
+			return ExportOBJ(path, generatedMeshes[index]);
+		else
+			return "Index out of bounds.";
+	}
+
+	public string ExportOBJ(string path, GameObject go)
+	{
+		if(go.GetComponent<MeshFilter>())
+			return ExportOBJ(path, go.GetComponent<MeshFilter>());
+		else
+			return "No mesh filter found.";
+	}
+
+	public string ExportCurrent(string path)
+	{
+		return ExportOBJ(path, generatedMeshes[generatedMeshes.Count-1]);
+	}
+
+	/// <summary>
+	///	Ingore rect methods.
+	/// </summary>
+	public void IgnoreRect(Rect rect)
+	{
+		ignoreRect.Add(rect);
+	}
+
+	public void ClearIgnoreRects()
+	{
+		ignoreRect.Clear();
+	}
 
 
 	/// <summary>
