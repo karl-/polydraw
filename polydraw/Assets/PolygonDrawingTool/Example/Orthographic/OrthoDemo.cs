@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class Demo : MonoBehaviour {
+public class OrthoDemo : MonoBehaviour {
 
 	Draw draw;
 	public GameObject drawGameObject;
