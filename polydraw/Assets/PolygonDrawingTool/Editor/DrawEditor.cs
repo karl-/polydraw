@@ -28,7 +28,7 @@ public class DrawEditor : Editor {
 				script.closingDistance = EditorGUILayout.FloatField("Closing Distance", script.closingDistance);
 				break;
 
-			case Draw.DrawStyle.PointMaxVertice:
+			case Draw.DrawStyle.PointMaxVertex:
 				script.maxVertices = EditorGUILayout.IntField("Max Allowed Vertices", script.maxVertices);
 				break;
 

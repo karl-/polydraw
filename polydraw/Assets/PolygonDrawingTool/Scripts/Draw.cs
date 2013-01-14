@@ -18,10 +18,11 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 
-public class Draw : MonoBehaviour {
-
+public class Draw : MonoBehaviour
+{
 #region MEMBERS
 	List<Vector2> userPoints = new List<Vector2>();
 	
@@ -83,7 +84,7 @@ public class Draw : MonoBehaviour {
 #endregion
 
 #region ENUM
-	enum Winding {
+	enum PolygonType {
 		ConvexClockwise,
 		ConvexCounterClockwise,
 		ConcaveClockwise,
@@ -93,7 +94,7 @@ public class Draw : MonoBehaviour {
 	public enum DrawStyle {
 		Continuous,
 		ContinuousClosingDistance,
-		PointMaxVertice,
+		PointMaxVertex,
 		PointClosingDistance
 	}
 	
@@ -111,86 +112,103 @@ public class Draw : MonoBehaviour {
 #endregion
 
 #region UPDATE
-	void Update() {
+	void Update()
+	{
 		// If mouse is in an ignoreRect, don't affect  mesh drawing.
-		if(ignoreRect.Count > 0) {
-			foreach(Rect r in ignoreRect) {
+		if(ignoreRect.Count > 0)
+		{
+			foreach(Rect r in ignoreRect)
+			{
 				if(r.Contains(Input.mousePosition))
 					return;
 			}
 		}
 
-		if(drawStyle == DrawStyle.PointMaxVertice || drawStyle == DrawStyle.PointClosingDistance) {
-			if(Input.GetMouseButtonDown(0)) {
-				Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-				worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
+		switch(drawStyle)
+		{
+			case DrawStyle.PointMaxVertex:
+			case DrawStyle.PointClosingDistance:
+				if(Input.GetMouseButtonDown(0))
+				{
+					Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
-				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
+					DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
+					
+					AddPoint(worldPos);
+					
+					placingPoint = true;
+				}
 				
-				AddPoint(worldPos);
-				
-				placingPoint = true;
-			}
-			
-			if(Input.mousePosition != previousMousePosition && placingPoint) {			
-				previousMousePosition = Input.mousePosition;
-				Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-				worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
-				
-				userPoints[userPoints.Count - 1] = worldPos;
+				if(Input.mousePosition != previousMousePosition && placingPoint)
+				{			
+					previousMousePosition = Input.mousePosition;
+					Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
+					
+					userPoints[userPoints.Count - 1] = worldPos;
 
-				RefreshPreview();
-			}
-	
-			if(Input.GetMouseButtonUp(0)) {
-				placingPoint = false;
-				
-				// CLosing Distance
-				if(drawStyle == DrawStyle.PointClosingDistance && userPoints.Count > 2) {
-					if( (userPoints[0] - userPoints[userPoints.Count - 1]).sqrMagnitude < closingDistance ) {
-						userPoints.RemoveAt(userPoints.Count-1);
-						DrawFinalMesh(userPoints.ToArray());
+					RefreshPreview();
+				}
+		
+				if(Input.GetMouseButtonUp(0))
+				{
+					placingPoint = false;
+					
+					// CLosing Distance
+					if(drawStyle == DrawStyle.PointClosingDistance && userPoints.Count > 2)
+					{
+						if( (userPoints[0] - userPoints[userPoints.Count - 1]).sqrMagnitude < closingDistance )
+						{
+							userPoints.RemoveAt(userPoints.Count-1);
+							DrawFinalMesh(userPoints);
+						}
+					}
+
+					// Max Vertice
+					if(userPoints.Count >= maxVertices && drawStyle == DrawStyle.PointMaxVertex) {
+						DrawFinalMesh(userPoints);
 					}
 				}
+				break;
 
-				// Max Vertice
-				if(userPoints.Count >= maxVertices && drawStyle == DrawStyle.PointMaxVertice) {
-					DrawFinalMesh(userPoints.ToArray());
+			case DrawStyle.Continuous:
+			case DrawStyle.ContinuousClosingDistance:
+				if(Input.GetMouseButton(0))
+				{
+					if(timer > samplingRate || Input.GetMouseButtonDown(0))
+					{
+						timer = 0f;
+						
+						// The triangulation algorithm in use doesn't like multiple verts
+						// sharing the same world space, so don't let it happen!
+						if(Input.mousePosition != previousMousePosition)
+						{			
+							previousMousePosition = Input.mousePosition;
+							
+							Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+							worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
+						
+							AddPoint(worldPos);
+							
+							if(drawStyle == DrawStyle.ContinuousClosingDistance && userPoints.Count > 2)
+							{
+								if( (userPoints[0] - userPoints[userPoints.Count - 1]).sqrMagnitude < (closingDistance) )
+									DrawFinalMesh(userPoints);
+							}//drawstyle
+						}//mousepos check
+					}//mousedown			
+						
+						timer += 1 * Time.deltaTime;
 				}
-			}
-		}
-		else
-		if(drawStyle == DrawStyle.Continuous || drawStyle == DrawStyle.ContinuousClosingDistance)
-		{
-			if(Input.GetMouseButton(0)) {
-				if(timer > samplingRate || Input.GetMouseButtonDown(0)) {
-					timer = 0f;
 					
-					// The triangulation alpreviewMeshrithm in use doesn't like multiple verts
-					// sharing the same world space, so don't let it happen!
-					if(Input.mousePosition != previousMousePosition) {			
-						previousMousePosition = Input.mousePosition;
-						
-						Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-						worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
-					
-						AddPoint(worldPos);
-						
-						if(drawStyle == DrawStyle.ContinuousClosingDistance && userPoints.Count > 2) {
-							if( (userPoints[0] - userPoints[userPoints.Count - 1]).sqrMagnitude < (closingDistance) )
-								DrawFinalMesh(userPoints.ToArray());
-						}//drawstyle
-					}//mousepos check
-				}//mousedown			
-				
-				timer += 1 * Time.deltaTime;
-			}
-			
-			if(Input.GetMouseButtonUp(0)) {
-				DrawFinalMesh(userPoints.ToArray());
-				DestroyTempGameObject();
-				DestroyLineRenderer();
-			}
+				if(Input.GetMouseButtonUp(0))
+				{
+					DrawFinalMesh(userPoints);
+					DestroyTempGameObject();
+					DestroyLineRenderer();
+				}
+				break;
 		}
 	}
 #endregion
@@ -203,8 +221,8 @@ public class Draw : MonoBehaviour {
 		{	
 			lineRenderer = gameObject.AddComponent<LineRenderer>();
 			lineRenderer.material = new Material (Shader.Find("Particles/Additive"));
-	     	lineRenderer.SetColors(Color.green, Color.green);
-	     	lineRenderer.SetWidth(lineWidth,lineWidth);
+			lineRenderer.SetColors(Color.green, Color.green);
+			lineRenderer.SetWidth(lineWidth,lineWidth);
 		}
 
 		lineRenderer.useWorldSpace = true;
@@ -252,7 +270,7 @@ public class Draw : MonoBehaviour {
 
 		if(userPoints.Count > 1) {			
 			if(drawMeshInProgress)
-				DrawTempMesh(userPoints.ToArray());
+				DrawTempMesh(userPoints);
 
 			DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
 		}
@@ -267,8 +285,8 @@ public class Draw : MonoBehaviour {
 
 	void DestroyTempGameObject() 
 	{
-		if(previewMesh)
-			Destroy(previewMesh);
+		if(previewGameObject)
+			Destroy(previewGameObject);
 	}
 #endregion
 	
@@ -276,51 +294,28 @@ public class Draw : MonoBehaviour {
 	/// <summary>
 	/// Draw Mesh - will use only on GameObject and re-write itself.
 	/// </summary>
-	GameObject previewMesh;
-	Mesh mesh;
-	void DrawTempMesh(Vector2[] points) {		
-		if( points.Length < 2 ) {
+	GameObject previewGameObject;
+	void DrawTempMesh(List<Vector2> points) {		
+		if( points.Count < 2 ) {
 			CleanUp();
 			return;
 		}
 		
-		Winding convexity = Convexity(points, false);
-		
-		// This should probably be accounted for in the Triangulation method using a more
-		// reliable fill alpreviewMeshrithm, but for non-intersecting geometry this works adequately 
-		// well.
-		if(convexity == Winding.ConcaveClockwise || convexity == Winding.ConvexClockwise)
-			Array.Reverse(points);
-		
-		// Use the triangulator to get indices for creating triangles
-        Triangulator tr = new Triangulator(points);
-        int[] indices = tr.Triangulate();
-       
-        // Create the Vector3 vertices
-        Vector3[] vertices = new Vector3[points.Length];
-        for (int i=0; i<vertices.Length; i++) {
-            vertices[i] = new Vector3(points[i].x, points[i].y, zPosition);
-        }
-       
-        // Create the mesh
-		if(previewMesh == null) {
-			previewMesh = new GameObject();
-			previewMesh.AddComponent<MeshFilter>();
-			previewMesh.GetComponent<MeshFilter>().sharedMesh = new Mesh();
-			previewMesh.AddComponent<MeshRenderer>();
+		// Create the mesh
+		if(previewGameObject == null) {
+			previewGameObject = new GameObject();
+			previewGameObject.AddComponent<MeshFilter>();
+			previewGameObject.GetComponent<MeshFilter>();
+			previewGameObject.AddComponent<MeshRenderer>();
 		}
 		
-		mesh = previewMesh.GetComponent<MeshFilter>().sharedMesh;
-		mesh.Clear();
-		mesh.vertices = vertices;
-        mesh.triangles = indices;
-		mesh.uv = CalculateUVs(vertices, uvScale);
-		mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
-       
-        // Set up game object with mesh;
-       	previewMesh.GetComponent<MeshFilter>().sharedMesh = mesh;
-		previewMesh.GetComponent<MeshRenderer>().material = material;
+		PolygonType convexity = Convexity(points);
+
+		Mesh m, c;
+		MeshWithPoints(out m, out c, convexity);
+
+		previewGameObject.GetComponent<MeshFilter>().sharedMesh = m;
+		previewGameObject.GetComponent<MeshRenderer>().material = material;
 	}
 	
 	/// <summary>
@@ -329,45 +324,193 @@ public class Draw : MonoBehaviour {
 	/// <param name='points'>
 	/// Points.
 	/// </param>
-	void DrawFinalMesh(Vector2[] points) {
+	void DrawFinalMesh(List<Vector2> points)
+	{
+		
 		DestroyTempGameObject();
-		if(points.Length < 3 || ((points[0] - points[points.Length - 1]).sqrMagnitude > (maxDistance) && useDistanceCheck) ) {
+		
+		if(points.Count < 3 || ((points[0] - points[points.Count - 1]).sqrMagnitude > maxDistance && useDistanceCheck) )
+		{
 			CleanUp();	
 			return;
 		}
-		CheckMaxMeshes();
-		
+
 		// Check for self intesection 
-		if(SelfIntersectTest(new List<Vector2>(points))) {
+		if(SelfIntersectTest(points))
+		{
 			CleanUp();
 			return;
 		}
 
-		Winding convexity = Convexity(points, true);
+		// If we're over max, delete the earliest drawn mesh
+		CheckMaxMeshes();
 
-		if(convexity == Winding.ConcaveClockwise || convexity == Winding.ConvexClockwise)
+		// Calculate this here because the collision code needs it too
+		PolygonType convexity = Convexity(points);
+
+		// graphics = any mesh that you can see, collision = the side mesh
+		Mesh graphics, collision;
+
+		MeshWithPoints(out graphics, out collision, convexity);
+				
+		GameObject finalMeshGameObject = new GameObject();
+		finalMeshGameObject.name = meshName;
+
+		if(useTag)
+			finalMeshGameObject.tag = tagVal;	
+
+		finalMeshGameObject.AddComponent<MeshFilter>();
+		finalMeshGameObject.GetComponent<MeshFilter>().sharedMesh = graphics;
+		finalMeshGameObject.AddComponent<MeshRenderer>();
+
+		Material[] mats = (generateSide) ? new Material[2] {material, sideMaterial} : new Material[1]{material};
+
+		finalMeshGameObject.GetComponent<MeshRenderer>().sharedMaterials = mats;
+
+		switch(colliderStyle)	
+		{
+			case ColliderStyle.MeshCollider:
+				finalMeshGameObject.AddComponent<MeshCollider>();
+				
+				finalMeshGameObject.GetComponent<MeshCollider>().sharedMesh = collision;
+
+				if(applyRigidbody)
+				{
+					Rigidbody rigidbody = finalMeshGameObject.AddComponent<Rigidbody>();
+				
+					if( (convexity == PolygonType.ConcaveCounterClockwise || convexity == PolygonType.ConcaveClockwise) && forceConvex == false)
+						finalMeshGameObject.GetComponent<MeshCollider>().convex = false;
+					else
+						finalMeshGameObject.GetComponent<MeshCollider>().convex = true;
+
+					if(areaRelativeMass)
+						rigidbody.mass = Triangulator.Area(points.ToArray()) * massModifier;
+					else
+						rigidbody.mass = mass;
+
+					rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezePositionZ;
+					
+					if(useGravity)
+						rigidbody.useGravity = true;
+					else
+						rigidbody.useGravity = false;
+					
+					if(isKinematic)
+						rigidbody.isKinematic = true;
+					else
+						rigidbody.isKinematic = false;
+				}
+			break;
+
+			case ColliderStyle.BoxCollider:
+				if(applyRigidbody)
+				{
+					BoxCollider parent_collider = finalMeshGameObject.AddComponent<BoxCollider>();
+
+					// the parent collider - don't allow it to be seen, just use it for
+					// mass and other settings
+					parent_collider.size = new Vector3(.1f, .1f, .1f);
+
+					Rigidbody rigidbody = finalMeshGameObject.AddComponent<Rigidbody>();
+
+					if(areaRelativeMass)
+						rigidbody.mass = Triangulator.Area(points.ToArray()) * massModifier;
+					else
+						rigidbody.mass = mass;
+
+					rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezePositionZ;
+					
+					if(useGravity)
+						rigidbody.useGravity = true;
+					else
+						rigidbody.useGravity = false;
+					
+					if(isKinematic)
+						rigidbody.isKinematic = true;
+					else
+						rigidbody.isKinematic = false;
+				}
+
+				for(int i = 0; i < points.Count; i++)
+				{
+					float x1, x2, y1, y2;
+					x1 = points[i].x;
+					y1 = points[i].y;
+
+					if(i > points.Count-2) {
+						x2 = points[0].x;
+						y2 = points[0].y;
+					}
+					else {
+						x2 = points[i+1].x;
+						y2 = points[i+1].y;			
+					}
+
+					GameObject previewGameObject = new GameObject();
+					previewGameObject.name = "BoxCollider" + i;
+					previewGameObject.AddComponent<BoxCollider>();
+					
+					previewGameObject.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
+
+					Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );
+					
+					float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
+					float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
+
+					previewGameObject.transform.localScale = new Vector3(length, .0001f, 1f);
+					previewGameObject.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
+
+					previewGameObject.transform.parent = finalMeshGameObject.transform;
+				}
+			break;
+
+			default:
+			break;
+
+		}
+
+		generatedMeshes.Add (finalMeshGameObject);
+		CleanUp();
+	}
+
+	// Assumes local space.  Returns graphics mesh in the following submesh order:
+	// 0 - Front face
+	// 1 - Sides (optional)
+	// 2 - Back face (optional)
+	void MeshWithPoints(out Mesh m, out Mesh c, PolygonType convexity)
+	{
+		m = new Mesh();
+		c = new Mesh();
+
+		Vector2[] points = userPoints.ToArray();
+
+		if(convexity == PolygonType.ConcaveClockwise || convexity == PolygonType.ConvexClockwise)
 			Array.Reverse(points);
 		
 		/*** Generate Front Face ***/
-        Triangulator tr = new Triangulator(points);
-        int[] front_indices = tr.Triangulate();
-       
-        // Create the Vector3 vertices
-        Vector3[] front_vertices = new Vector3[points.Length];
-        for (int i=0; i<front_vertices.Length; i++) {
-            front_vertices[i] = new Vector3(points[i].x, points[i].y, 0f);
-        }
+		Triangulator tr = new Triangulator(userPoints.ToArray());
+		int[] front_indices = tr.Triangulate();
+	   
+		// Create the Vector3 vertices
+		List<Vector3> front_vertices = new List<Vector3>(VerticesWithPoints(userPoints, 0f));
+
+		List<Vector2> front_uv = ListMultiply(userPoints, uvScale);
+
 		/*** Finish Front Face ***/
 		
-        /*** Generate Sides ***/
-        List<Vector3> side_vertices = new List<Vector3>();
-		for (int i=0; i<points.Length; i++) {
-   			side_vertices.Add( new Vector3( points[i].x, points[i].y, 10) );
-			side_vertices.Add( new Vector3( points[i].x, points[i].y, -10) );
-		}	
-        
-		side_vertices.Add( new Vector3( points[0].x, points[0].y, 10) );
-		side_vertices.Add( new Vector3( points[0].x, points[0].y, -10) );
+		/*** Generate Sides ***/
+		float half_sideLength = sideLength / 2f;
+		List<Vector3> side_vertices = new List<Vector3>();
+		
+		for (int i=0; i < points.Length; i++) {
+			side_vertices.Add( new Vector3( points[i].x, points[i].y, half_sideLength) );
+			side_vertices.Add( new Vector3( points[i].x, points[i].y, -half_sideLength) );
+		}
+		
+		// these sit right on the first two.  they don't share cause that would screw with
+		// the lame way uvs are made.
+		side_vertices.Add( new Vector3( points[0].x, points[0].y, half_sideLength ) );
+		side_vertices.Add( new Vector3( points[0].x, points[0].y, -half_sideLength ) );
 		
 		// +6 connects it to the first 2 verts
 		int[] side_indices = new int[(side_vertices.Count*3)];
@@ -390,171 +533,29 @@ public class Draw : MonoBehaviour {
 			v++;
 		}
 		/*** Finish Generating Sides ***/
-		
-		/*** Concat Front + Side ***/
-		List<Vector3> all_vertices = new List<Vector3>();
-		List<int> all_indices = new List<int>();
+
+		List<Vector2> side_uv = new List<Vector2>(CalcSideUVs(side_vertices));
+
+		m.Clear();
+		m.vertices = generateSide ? front_vertices.Concat(side_vertices).ToArray() : front_vertices.ToArray();
 		if(generateSide) {
-			all_vertices = new List<Vector3>(front_vertices);
-			all_indices = new List<int>(front_indices);
-			
-			all_vertices.AddRange(side_vertices);
-			for(int i = 0; i < side_indices.Length; i++)
-				side_indices[i] += front_vertices.Length;
-			
-			all_indices.AddRange(side_indices);
-		}
-		/*** Finish Front and Side Concatenation ***/
-		
-		/*** Make Side Collider Mesh Seperately ***/
-		Mesh col = new Mesh();
-		if(!generateSide) {
-			col.Clear();
-			col.vertices = side_vertices.ToArray();
-			col.triangles = side_indices;
-			col.RecalculateBounds();
-			col.Optimize();
-		}
-		else
-			Destroy(col);
-		/*** End Side Collider Mesh ***/
-
-		GameObject f_previewMesh = new GameObject();
-		f_previewMesh.name = meshName;
-
-		if(useTag)
-			f_previewMesh.tag = tagVal;	
-
-		f_previewMesh.AddComponent<MeshFilter>();
-		f_previewMesh.GetComponent<MeshFilter>().sharedMesh = new Mesh();
-		Mesh mesh = f_previewMesh.GetComponent<MeshFilter>().sharedMesh;
-		f_previewMesh.AddComponent<MeshRenderer>();
-		mesh.name = "Mesh";
-		mesh.Clear();
-
-		if(generateSide) {
-			mesh.vertices = all_vertices.ToArray();
-	        mesh.triangles = all_indices.ToArray();
-			mesh.uv = CalculateUVs(all_vertices.ToArray(), uvScale);
+			m.subMeshCount = 2;
+			m.SetTriangles(front_indices, 0);
+			m.SetTriangles(ShiftTriangles(side_indices, front_vertices.Count), 1);
 		} else {
-			mesh.vertices = front_vertices;
-	        mesh.triangles = front_indices;
-			mesh.uv = CalculateUVs(front_vertices, uvScale);
+			m.triangles = front_indices;
 		}
-		
-		mesh.Optimize();
-		mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
+		m.uv = generateSide ? front_uv.Concat(side_uv).ToArray() : front_uv.ToArray();
+		m.RecalculateNormals();
+		m.RecalculateBounds();
+		m.Optimize();
 
-        // Set up game object with mesh;
-       	f_previewMesh.GetComponent<MeshFilter>().sharedMesh = mesh;
-		f_previewMesh.GetComponent<MeshRenderer>().material = material;
-
-		switch(colliderStyle)	
-		{
-			case ColliderStyle.MeshCollider:
-				f_previewMesh.AddComponent<MeshCollider>();
-				
-				if(!generateSide)
-					f_previewMesh.GetComponent<MeshCollider>().sharedMesh = col;
-
-				if(applyRigidbody)
-				{
-					Rigidbody rigidbody = f_previewMesh.AddComponent<Rigidbody>();
-				
-					if( (convexity == Winding.ConcaveCounterClockwise || convexity == Winding.ConcaveClockwise) && forceConvex == false)
-						f_previewMesh.GetComponent<MeshCollider>().convex = false;
-					else
-						f_previewMesh.GetComponent<MeshCollider>().convex = true;
-
-					if(areaRelativeMass)
-						rigidbody.mass = Triangulator.Area(points) * massModifier;
-					else
-						rigidbody.mass = mass;
-
-					rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezePositionZ;
-					
-					if(useGravity)
-						rigidbody.useGravity = true;
-					else
-						rigidbody.useGravity = false;
-					
-					if(isKinematic)
-						rigidbody.isKinematic = true;
-					else
-						rigidbody.isKinematic = false;
-				}
-			break;
-
-			case ColliderStyle.BoxCollider:
-				if(applyRigidbody)
-				{
-					BoxCollider parent_collider = f_previewMesh.AddComponent<BoxCollider>();
-
-					// the parent collider - don't allow it to be seen, just use it for
-					// mass and other settings
-					parent_collider.size = new Vector3(.1f, .1f, .1f);
-
-					Rigidbody rigidbody = f_previewMesh.AddComponent<Rigidbody>();
-
-					if(areaRelativeMass)
-						rigidbody.mass = Triangulator.Area(points) * massModifier;
-					else
-						rigidbody.mass = mass;
-
-					rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezePositionZ;
-					
-					if(useGravity)
-						rigidbody.useGravity = true;
-					else
-						rigidbody.useGravity = false;
-					
-					if(isKinematic)
-						rigidbody.isKinematic = true;
-					else
-						rigidbody.isKinematic = false;
-				}
-
-				for(int i = 0; i < points.Length; i++)
-				{
-					float x1, x2, y1, y2;
-					x1 = points[i].x;
-					y1 = points[i].y;
-
-					if(i > points.Length-2) {
-						x2 = points[0].x;
-						y2 = points[0].y;
-					}
-					else {
-						x2 = points[i+1].x;
-						y2 = points[i+1].y;			
-					}
-
-					GameObject previewMesh = new GameObject();
-					previewMesh.name = "BoxCollider" + i;
-					previewMesh.AddComponent<BoxCollider>();
-					
-					previewMesh.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
-
-					Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );
-					
-					float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
-					float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
-
-					previewMesh.transform.localScale = new Vector3(length, .0001f, 1f);
-					previewMesh.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
-
-					previewMesh.transform.parent = f_previewMesh.transform;
-				}
-			break;
-
-			default:
-			break;
-
-		}
-
-		generatedMeshes.Add (f_previewMesh);
-		CleanUp();
+		c.Clear();
+		c.vertices = side_vertices.ToArray();
+		c.triangles = side_indices;
+		c.uv = side_uv.ToArray();
+		c.RecalculateNormals();
+		c.RecalculateBounds();
 	}
 #endregion
 
@@ -615,10 +616,10 @@ public class Draw : MonoBehaviour {
 			return "Index out of bounds.";
 	}
 
-	public string ExportOBJ(string path, GameObject previewMesh)
+	public string ExportOBJ(string path, GameObject previewGameObject)
 	{
-		if(previewMesh.GetComponent<MeshFilter>())
-			return ExportOBJ(path, previewMesh.GetComponent<MeshFilter>());
+		if(previewGameObject.GetComponent<MeshFilter>())
+			return ExportOBJ(path, previewGameObject.GetComponent<MeshFilter>());
 		else
 			return "No mesh filter found.";
 	}
@@ -646,13 +647,35 @@ public class Draw : MonoBehaviour {
 
 #region UV
 	
-	Vector2[] CalculateUVs(Vector3[] v, Vector2 uvScale)
+	// A little hacky, yes, but it works well enough to pass
+	Vector2[] CalcSideUVs(List<Vector3> v)
 	{
-		Vector2[] uvs = new Vector2[v.Length];
-		for(var i = 0; i < v.Length; i++)
+		// we konw that vertices are generated in rows, in a ccwise manner.
+		// this method figures out dist between rows, and uses the known 
+		// side length to generate properly scaled uvs.
+		
+		Vector2[] uvs = new Vector2[v.Count];
+
+		float curX = 0f;
+
+		uvs[0] = new Vector2(0f, v[0].z);
+		uvs[1] = new Vector2(0f, v[1].z);
+
+		for(int i = 2; i < v.Count; i+=2)
 		{
-			uvs[i] = new Vector2( (v[i].x * uvScale.x), (v[i].y * uvScale.y));
+			curX += Vector3.Distance(v[i], v[i-2]);
+
+			uvs[i+0] = new Vector2(curX, v[i+0].z);
+			uvs[i+1] = new Vector2(curX, v[i+1].z);
 		}
+
+		return uvs;
+	}
+
+	List<Vector2> ListMultiply(List<Vector2> uvs, Vector2 mult)
+	{
+		for(int i = 0; i < uvs.Count; i++)
+			uvs[i].Scale(mult);
 		return uvs;
 	}
 #endregion
@@ -667,14 +690,33 @@ public class Draw : MonoBehaviour {
 		
 		return v;			
 	}
+
+	public Vector3[] VerticesWithPoints(List<Vector2> points, float zPos)
+	{
+		Vector3[] v = new Vector3[points.Count];
+		
+		for(int i = 0; i < points.Count; i++)
+			v[i] = new Vector3(points[i].x, points[i].y, zPos);
+		return v;
+	}
+
+	public int[] ShiftTriangles(int[] tris, int offset)
+	{
+		int[] shifted = new int[tris.Length];
+
+		for(int i = 0; i < shifted.Length; i++)
+			shifted[i] = tris[i] + offset;
+
+		return shifted;
+	}
 	
 	// http://paulbourke.net/geometry/clockwise/index.html
-	Winding Convexity(Vector2[] p, bool final)
+	PolygonType Convexity(List<Vector2> p)
 	{
 		bool isConcave = false;
 		
-		int n = p.Length;
-	   	int i,j,k;
+		int n = p.Count;
+		int i,j,k;
 		double wind = 0;
 		int flag = 0;
 		double z;
@@ -698,72 +740,72 @@ public class Draw : MonoBehaviour {
 
 		}
 		
-		Winding convexity;
+		PolygonType convexity;
 		if(isConcave == true || flag == 0) 
 		{
 			if(wind > 0)
-				convexity = Winding.ConcaveCounterClockwise;
+				convexity = PolygonType.ConcaveCounterClockwise;
 			else
-				convexity = Winding.ConcaveClockwise;
+				convexity = PolygonType.ConcaveClockwise;
 		}
 		else
 		{
 			if(wind > 0)
-				convexity = Winding.ConvexCounterClockwise;
+				convexity = PolygonType.ConvexCounterClockwise;
 			else
-				convexity = Winding.ConvexClockwise;
+				convexity = PolygonType.ConvexClockwise;
 		}
 
 		return convexity;
 	}
 
-	// http://www.gamedev.net/topic/548477-fast-2d-Winding-self-intersect-test/
+	// http://www.gamedev.net/topic/548477-fast-2d-PolygonType-self-intersect-test/
 	public bool SelfIntersectTest(List<Vector2> vertices)
 	{
-	    for (int i = 0; i < vertices.Count; ++i)
-	    {
-	        if (i < vertices.Count - 1)
-	        {
-	            for (int h = i + 1; h < vertices.Count; ++h)
-	            {
-	                // Do two vertices lie on top of one another?
-	                if (vertices[i] == vertices[h])
-	                {
-	                    return true;
-	                }
-	            }
-	        }
+		for (int i = 0; i < vertices.Count; ++i)
+		{
+			if (i < vertices.Count - 1)
+			{
+				for (int h = i + 1; h < vertices.Count; ++h)
+				{
+					// Do two vertices lie on top of one another?
+					if (vertices[i] == vertices[h])
+					{
+						return true;
+					}
+				}
+			}
 
-	        int j = (i + 1) % vertices.Count;
-	        Vector2 iToj = vertices[j] - vertices[i];
-	        Vector2 iTojNormal = new Vector2(iToj.y, -iToj.x);
-	        // i is the first vertex and j is the second
-	        int startK = (j + 1) % vertices.Count;
-	        int endK = (i - 1 + vertices.Count) % vertices.Count;
-	        endK += startK < endK ? 0 : startK + 1;
-	        int k = startK;
-	        Vector2 iTok = vertices[k] - vertices[i];
-	        bool onLeftSide = Vector2.Dot(iTok, iTojNormal) >= 0;
-	        Vector2 prevK = vertices[k];
-	        ++k;
-	        for (; k <= endK; ++k)
-	        {
-	            int modK = k % vertices.Count;
-	            iTok = vertices[modK] - vertices[i];
-	            if (onLeftSide != Vector2.Dot(iTok, iTojNormal) >= 0)
-	            {
-	                Vector2 prevKtoK = vertices[modK] - prevK;
-	                Vector2 prevKtoKNormal = new Vector2(prevKtoK.y, -prevKtoK.x);
-	                if ((Vector2.Dot(vertices[i] - prevK, prevKtoKNormal) >= 0) != (Vector2.Dot(vertices[j] - prevK, prevKtoKNormal) >= 0))
-	                {
-	                    return true;
-	                }
-	            }
-	            onLeftSide = Vector2.Dot(iTok, iTojNormal) > 0;
-	            prevK = vertices[modK];
-	        }
-	    }
-	    return false;
+			int j = (i + 1) % vertices.Count;
+			Vector2 iToj = vertices[j] - vertices[i];
+			Vector2 iTojNormal = new Vector2(iToj.y, -iToj.x);
+			// i is the first vertex and j is the second
+			int startK = (j + 1) % vertices.Count;
+			int endK = (i - 1 + vertices.Count) % vertices.Count;
+			endK += startK < endK ? 0 : startK + 1;
+			int k = startK;
+			Vector2 iTok = vertices[k] - vertices[i];
+			bool onLeftSide = Vector2.Dot(iTok, iTojNormal) >= 0;
+			Vector2 prevK = vertices[k];
+			++k;
+			for (; k <= endK; ++k)
+			{
+				int modK = k % vertices.Count;
+				iTok = vertices[modK] - vertices[i];
+				if (onLeftSide != Vector2.Dot(iTok, iTojNormal) >= 0)
+				{
+					Vector2 prevKtoK = vertices[modK] - prevK;
+					Vector2 prevKtoKNormal = new Vector2(prevKtoK.y, -prevKtoK.x);
+					if ((Vector2.Dot(vertices[i] - prevK, prevKtoKNormal) >= 0) != (Vector2.Dot(vertices[j] - prevK, prevKtoKNormal) >= 0))
+					{
+						return true;
+					}
+				}
+				onLeftSide = Vector2.Dot(iTok, iTojNormal) > 0;
+				prevK = vertices[modK];
+			}
+		}
+		return false;
 	}
 #endregion
 }
