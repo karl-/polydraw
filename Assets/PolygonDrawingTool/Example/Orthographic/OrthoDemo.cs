@@ -41,7 +41,7 @@ public class OrthoDemo : MonoBehaviour {
 			}
 			
 			if(GUILayout.Button("Point - Max Vertice", GUILayout.MaxWidth(horizontalSize), GUILayout.MinHeight(selectionButtonHeight))) {
-				SetDrawMode(Draw.DrawStyle.PointMaxVertice);
+				SetDrawMode(Draw.DrawStyle.PointMaxVertex);
 			}
 			
 			if(GUILayout.Button("Point - Closing Distance", GUILayout.MaxWidth(horizontalSize), GUILayout.MinHeight(selectionButtonHeight))) {
@@ -85,7 +85,7 @@ public class OrthoDemo : MonoBehaviour {
 					GUILayout.Label("Click and drag to draw points.  Let the mouse up to finalize the mesh, or draw a point near the origin.");
 				break;
 				
-			case Draw.DrawStyle.PointMaxVertice:
+			case Draw.DrawStyle.PointMaxVertex:
 				GUILayout.Label("Click to place points.  The mesh will finalize itself once the max number of Vertices has been reached.");
 				break;
 			
@@ -117,7 +117,7 @@ public class OrthoDemo : MonoBehaviour {
 				draw.showPointMarkers = true;			
 				break;
 				
-			case Draw.DrawStyle.PointMaxVertice:
+			case Draw.DrawStyle.PointMaxVertex:
 				draw.showPointMarkers = true;
 				break;
 			
