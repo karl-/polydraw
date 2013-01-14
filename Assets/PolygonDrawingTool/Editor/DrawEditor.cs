@@ -37,6 +37,8 @@ public class DrawEditor : Editor {
 				break;
 		}
 
+		script.inputCamera = (Camera)EditorGUILayout.ObjectField(new GUIContent("Input Camera", "The camera that listens for mouse input.  Must be orthographic."), script.inputCamera, typeof(Camera), true);
+
 		GUILayout.Space(5);
 
 		GUILayout.Label("Drawing Settings", EditorStyles.boldLabel);
@@ -77,7 +79,12 @@ public class DrawEditor : Editor {
 		
 		script.maxAllowedObjects = EditorGUILayout.IntField("Max Meshes Allowed", script.maxAllowedObjects);
 
+		GUILayout.Label("Collision", EditorStyles.boldLabel);
+
 		script.colliderStyle = (Draw.ColliderStyle)EditorGUILayout.EnumPopup(new GUIContent("Collison", "If set to mesh, a Mesh Collider will be applied.  If set to Box, a series of thin box colliders will be generated bordering the edges, allowing for concave interactions.  None means no collider will be applied."), script.colliderStyle);
+
+		if(script.colliderStyle == Draw.ColliderStyle.BoxCollider)
+			script.colDepth = EditorGUILayout.FloatField("Collider Depth", script.colDepth);
 
 		switch(script.colliderStyle) {
 			case Draw.ColliderStyle.BoxCollider:

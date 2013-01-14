@@ -69,8 +69,10 @@ public class Draw : MonoBehaviour
 	public float zPosition = 0;
 	public Vector2 uvScale = new Vector2(1f, 1f);
 	public string meshName = "Drawn Mesh";
+
 	public bool generateBoxColliders = false;
 	public ColliderStyle colliderStyle = ColliderStyle.BoxCollider;
+	public float colDepth = 5f;
 
 	/// <summary>
 	/// Internal
@@ -80,7 +82,7 @@ public class Draw : MonoBehaviour
 	private float timer = 0f;
 	private List<GameObject> generatedMeshes = new List<GameObject>();
 	private int windingOrder; // Positive = CC , Negative = CW
-	Camera mainCamera;
+	public Camera inputCamera;
 	private float boxColliderSize = .01f;
 
 #endregion
@@ -109,7 +111,8 @@ public class Draw : MonoBehaviour
 
 #region INITIALIZATION
 	void Start() {
-		mainCamera = Camera.main;
+		if(inputCamera == null)
+			inputCamera = Camera.main;
 	}
 #endregion
 
@@ -132,7 +135,7 @@ public class Draw : MonoBehaviour
 			case DrawStyle.PointClosingDistance:
 				if(Input.GetMouseButtonDown(0))
 				{
-					Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
 					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
 					DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
@@ -145,7 +148,7 @@ public class Draw : MonoBehaviour
 				if(Input.mousePosition != previousMousePosition && placingPoint)
 				{			
 					previousMousePosition = Input.mousePosition;
-					Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
 					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 					
 					userPoints[userPoints.Count - 1] = worldPos;
@@ -188,7 +191,7 @@ public class Draw : MonoBehaviour
 						{			
 							previousMousePosition = Input.mousePosition;
 							
-							Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+							Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
 							worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 						
 							AddPoint(worldPos);
@@ -328,9 +331,13 @@ public class Draw : MonoBehaviour
 	/// </param>
 	void DrawFinalMesh(List<Vector2> points)
 	{
-		
 		DestroyTempGameObject();
-		
+	
+		string str = "";
+		foreach(Vector2 v in points)
+			str += "" + v.ToString() + "\n";
+		Debug.Log(str);
+
 		if(points.Count < 3 || ((points[0] - points[points.Count - 1]).sqrMagnitude > maxDistance && useDistanceCheck) )
 		{
 			CleanUp();	
@@ -388,7 +395,7 @@ public class Draw : MonoBehaviour
 						finalMeshGameObject.GetComponent<MeshCollider>().convex = true;
 
 					if(areaRelativeMass)
-						rigidbody.mass = Triangulator.Area(points.ToArray()) * massModifier;
+						rigidbody.mass = Mathf.Abs(Triangulator.Area(points.ToArray()) * massModifier);
 					else
 						rigidbody.mass = mass;
 
@@ -461,7 +468,7 @@ public class Draw : MonoBehaviour
 					float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
 					float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
 
-					previewGameObject.transform.localScale = new Vector3(length, boxColliderSize, 1f);
+					previewGameObject.transform.localScale = new Vector3(length, boxColliderSize, colDepth);
 					previewGameObject.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
 
 					previewGameObject.transform.parent = finalMeshGameObject.transform;
