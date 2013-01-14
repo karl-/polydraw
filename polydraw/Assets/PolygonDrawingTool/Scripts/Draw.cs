@@ -22,6 +22,7 @@ using System.IO;
 
 public class Draw : MonoBehaviour {
 
+#region MEMBERS
 	List<Vector2> userPoints = new List<Vector2>();
 	
 	/// <summary>
@@ -43,12 +44,18 @@ public class Draw : MonoBehaviour {
 	public GameObject pointMarker;
 	private List<GameObject> pointMarkers = new List<GameObject>();
 	private List<Rect> ignoreRect = new List<Rect>();
+	public LineRenderer lineRenderer;
+
 
 	///Final Mesh Settings
 	public Material material;
 	public int maxAllowedObjects = 4;
 	public bool generateMeshCollider = true;
+
 	public bool generateSide = false;
+	public float sideLength = 5f;
+	public Material sideMaterial;
+
 	public bool forceConvex = false;
 	public bool applyRigidbody = true;
 	public bool areaRelativeMass = true;
@@ -72,14 +79,16 @@ public class Draw : MonoBehaviour {
 	private float timer = 0f;
 	private List<GameObject> generatedMeshes = new List<GameObject>();
 	private int windingOrder; // Positive = CC , Negative = CW
+	Camera mainCamera;
+#endregion
 
-	enum Polygon {
+#region ENUM
+	enum Winding {
 		ConvexClockwise,
 		ConvexCounterClockwise,
 		ConcaveClockwise,
 		ConcaveCounterClockwise
 	}
-	Camera mainCamera;
 
 	public enum DrawStyle {
 		Continuous,
@@ -93,11 +102,15 @@ public class Draw : MonoBehaviour {
 		MeshCollider,
 		None
 	}
+#endregion
 
+#region INITIALIZATION
 	void Start() {
 		mainCamera = Camera.main;
 	}
+#endregion
 
+#region UPDATE
 	void Update() {
 		// If mouse is in an ignoreRect, don't affect  mesh drawing.
 		if(ignoreRect.Count > 0) {
@@ -112,7 +125,7 @@ public class Draw : MonoBehaviour {
 				Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
 				worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
-				DrawLineRenderer(userPoints.ToArray());
+				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
 				
 				AddPoint(worldPos);
 				
@@ -153,7 +166,7 @@ public class Draw : MonoBehaviour {
 				if(timer > samplingRate || Input.GetMouseButtonDown(0)) {
 					timer = 0f;
 					
-					// The triangulation algorithm in use doesn't like multiple verts
+					// The triangulation alpreviewMeshrithm in use doesn't like multiple verts
 					// sharing the same world space, so don't let it happen!
 					if(Input.mousePosition != previousMousePosition) {			
 						previousMousePosition = Input.mousePosition;
@@ -180,19 +193,22 @@ public class Draw : MonoBehaviour {
 			}
 		}
 	}
-	
-	void DrawLineRenderer(Vector2[] v) {
-		LineRenderer lineRenderer;
-		
-		if(!gameObject.GetComponent<LineRenderer>())
-			lineRenderer = gameObject.AddComponent<LineRenderer>();
-		else
-			lineRenderer = gameObject.GetComponent<LineRenderer>();			
+#endregion
 
-		lineRenderer.material = new Material (Shader.Find("Particles/Additive"));
-     	lineRenderer.SetColors(Color.green, Color.green);
-     	lineRenderer.SetWidth(lineWidth,lineWidth);
-		
+#region PREVIEW MESH AND LINE RENDERER
+	void DrawLineRenderer(Vector3[] v)
+	{
+
+		if(lineRenderer == null)
+		{	
+			lineRenderer = gameObject.AddComponent<LineRenderer>();
+			lineRenderer.material = new Material (Shader.Find("Particles/Additive"));
+	     	lineRenderer.SetColors(Color.green, Color.green);
+	     	lineRenderer.SetWidth(lineWidth,lineWidth);
+		}
+
+		lineRenderer.useWorldSpace = true;
+
 		if(v.Length > 1) {
 			lineRenderer.SetVertexCount(v.Length);
 			
@@ -200,18 +216,11 @@ public class Draw : MonoBehaviour {
 			//	if(i == v.Length)		// Draws the connecting line to beginning point
 			//		gameObject.GetComponent<LineRenderer>().SetPosition(i, new Vector3(v[0].x, v[0].y, zPosition) );
 			//	else
-					lineRenderer.SetPosition(i, new Vector3(v[i].x, v[i].y, zPosition) );
+					lineRenderer.SetPosition(i, v[i]);
 			}
 		}
 	}
-	
-	public void CleanUp() {
-		userPoints.Clear();
-		DestroyPointMarkers();
-		DestroyLineRenderer();
-		DestroyTempGameObject();
-	}
-	
+
 	void DestroyPointMarkers() {
 		for(int i = 0; i < pointMarkers.Count; i++) {
 			Destroy(pointMarkers[i]);
@@ -220,8 +229,12 @@ public class Draw : MonoBehaviour {
 	}
 
 	void DestroyLineRenderer() {
-		if(gameObject.GetComponent<LineRenderer>() != null)
-			Destroy(gameObject.GetComponent<LineRenderer>());
+		// if(gameObject.GetComponent<LineRenderer>() != null)
+			// Destroy(gameObject.GetComponent<LineRenderer>());
+		if(lineRenderer != null)
+		{
+			lineRenderer.SetVertexCount(0);		
+		}
 	}
 	
 	void AddPoint(Vector3 position) {
@@ -230,12 +243,7 @@ public class Draw : MonoBehaviour {
 
 		userPoints.Add(position);
 		
-		if(userPoints.Count > 1) {
-			if(drawMeshInProgress)
-				DrawTempMesh(userPoints.ToArray());
-			
-			DrawLineRenderer(userPoints.ToArray());
-		}
+		RefreshPreview();
 	}
 	
 	void RefreshPreview() {
@@ -246,14 +254,29 @@ public class Draw : MonoBehaviour {
 			if(drawMeshInProgress)
 				DrawTempMesh(userPoints.ToArray());
 
-			DrawLineRenderer(userPoints.ToArray());
+			DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
 		}
-	}
+	}	
 	
+	public void CleanUp() {
+		userPoints.Clear();
+		DestroyPointMarkers();
+		DestroyLineRenderer();
+		DestroyTempGameObject();
+	}
+
+	void DestroyTempGameObject() 
+	{
+		if(previewMesh)
+			Destroy(previewMesh);
+	}
+#endregion
+	
+#region MESH CREATION
 	/// <summary>
 	/// Draw Mesh - will use only on GameObject and re-write itself.
 	/// </summary>
-	GameObject go;
+	GameObject previewMesh;
 	Mesh mesh;
 	void DrawTempMesh(Vector2[] points) {		
 		if( points.Length < 2 ) {
@@ -261,12 +284,12 @@ public class Draw : MonoBehaviour {
 			return;
 		}
 		
-		Polygon convexity = Convexity(points, false);
+		Winding convexity = Convexity(points, false);
 		
 		// This should probably be accounted for in the Triangulation method using a more
-		// reliable fill algorithm, but for non-intersecting geometry this works adequately 
+		// reliable fill alpreviewMeshrithm, but for non-intersecting geometry this works adequately 
 		// well.
-		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
+		if(convexity == Winding.ConcaveClockwise || convexity == Winding.ConvexClockwise)
 			Array.Reverse(points);
 		
 		// Use the triangulator to get indices for creating triangles
@@ -280,14 +303,14 @@ public class Draw : MonoBehaviour {
         }
        
         // Create the mesh
-		if(go == null) {
-			go = new GameObject();
-			go.AddComponent<MeshFilter>();
-			go.GetComponent<MeshFilter>().sharedMesh = new Mesh();
-			go.AddComponent<MeshRenderer>();
+		if(previewMesh == null) {
+			previewMesh = new GameObject();
+			previewMesh.AddComponent<MeshFilter>();
+			previewMesh.GetComponent<MeshFilter>().sharedMesh = new Mesh();
+			previewMesh.AddComponent<MeshRenderer>();
 		}
 		
-		mesh = go.GetComponent<MeshFilter>().sharedMesh;
+		mesh = previewMesh.GetComponent<MeshFilter>().sharedMesh;
 		mesh.Clear();
 		mesh.vertices = vertices;
         mesh.triangles = indices;
@@ -296,33 +319,8 @@ public class Draw : MonoBehaviour {
         mesh.RecalculateBounds();
        
         // Set up game object with mesh;
-       	go.GetComponent<MeshFilter>().sharedMesh = mesh;
-		go.GetComponent<MeshRenderer>().material = material;
-	}
-	
-	void DestroyTempGameObject() 
-	{
-		if(go)
-			Destroy(go);
-	}
-	
-	void ChechMaxMeshes() 
-	{
-		if(generatedMeshes.Count >= maxAllowedObjects && maxAllowedObjects > 0)
-		{
-			GameObject g = generatedMeshes[0];
-			generatedMeshes.RemoveAt(0);
-			Destroy(g);
-		}
-	}
-	
-	public void DestroyAllGeneratedMeshes()
-	{
-		for(int i = 0; i < generatedMeshes.Count; i++)
-		{
-			Destroy(generatedMeshes[i]);
-		}
-		generatedMeshes.Clear();
+       	previewMesh.GetComponent<MeshFilter>().sharedMesh = mesh;
+		previewMesh.GetComponent<MeshRenderer>().material = material;
 	}
 	
 	/// <summary>
@@ -337,7 +335,7 @@ public class Draw : MonoBehaviour {
 			CleanUp();	
 			return;
 		}
-		ChechMaxMeshes();
+		CheckMaxMeshes();
 		
 		// Check for self intesection 
 		if(SelfIntersectTest(new List<Vector2>(points))) {
@@ -345,9 +343,9 @@ public class Draw : MonoBehaviour {
 			return;
 		}
 
-		Polygon convexity = Convexity(points, true);
+		Winding convexity = Convexity(points, true);
 
-		if(convexity == Polygon.ConcaveClockwise || convexity == Polygon.ConvexClockwise)
+		if(convexity == Winding.ConcaveClockwise || convexity == Winding.ConvexClockwise)
 			Array.Reverse(points);
 		
 		/*** Generate Front Face ***/
@@ -421,16 +419,16 @@ public class Draw : MonoBehaviour {
 			Destroy(col);
 		/*** End Side Collider Mesh ***/
 
-		GameObject f_go = new GameObject();
-		f_go.name = meshName;
+		GameObject f_previewMesh = new GameObject();
+		f_previewMesh.name = meshName;
 
 		if(useTag)
-			f_go.tag = tagVal;	
+			f_previewMesh.tag = tagVal;	
 
-		f_go.AddComponent<MeshFilter>();
-		f_go.GetComponent<MeshFilter>().sharedMesh = new Mesh();
-		Mesh mesh = f_go.GetComponent<MeshFilter>().sharedMesh;
-		f_go.AddComponent<MeshRenderer>();
+		f_previewMesh.AddComponent<MeshFilter>();
+		f_previewMesh.GetComponent<MeshFilter>().sharedMesh = new Mesh();
+		Mesh mesh = f_previewMesh.GetComponent<MeshFilter>().sharedMesh;
+		f_previewMesh.AddComponent<MeshRenderer>();
 		mesh.name = "Mesh";
 		mesh.Clear();
 
@@ -449,25 +447,25 @@ public class Draw : MonoBehaviour {
         mesh.RecalculateBounds();
 
         // Set up game object with mesh;
-       	f_go.GetComponent<MeshFilter>().sharedMesh = mesh;
-		f_go.GetComponent<MeshRenderer>().material = material;
+       	f_previewMesh.GetComponent<MeshFilter>().sharedMesh = mesh;
+		f_previewMesh.GetComponent<MeshRenderer>().material = material;
 
 		switch(colliderStyle)	
 		{
 			case ColliderStyle.MeshCollider:
-				f_go.AddComponent<MeshCollider>();
+				f_previewMesh.AddComponent<MeshCollider>();
 				
 				if(!generateSide)
-					f_go.GetComponent<MeshCollider>().sharedMesh = col;
+					f_previewMesh.GetComponent<MeshCollider>().sharedMesh = col;
 
 				if(applyRigidbody)
 				{
-					Rigidbody rigidbody = f_go.AddComponent<Rigidbody>();
+					Rigidbody rigidbody = f_previewMesh.AddComponent<Rigidbody>();
 				
-					if( (convexity == Polygon.ConcaveCounterClockwise || convexity == Polygon.ConcaveClockwise) && forceConvex == false)
-						f_go.GetComponent<MeshCollider>().convex = false;
+					if( (convexity == Winding.ConcaveCounterClockwise || convexity == Winding.ConcaveClockwise) && forceConvex == false)
+						f_previewMesh.GetComponent<MeshCollider>().convex = false;
 					else
-						f_go.GetComponent<MeshCollider>().convex = true;
+						f_previewMesh.GetComponent<MeshCollider>().convex = true;
 
 					if(areaRelativeMass)
 						rigidbody.mass = Triangulator.Area(points) * massModifier;
@@ -491,13 +489,13 @@ public class Draw : MonoBehaviour {
 			case ColliderStyle.BoxCollider:
 				if(applyRigidbody)
 				{
-					BoxCollider parent_collider = f_go.AddComponent<BoxCollider>();
+					BoxCollider parent_collider = f_previewMesh.AddComponent<BoxCollider>();
 
 					// the parent collider - don't allow it to be seen, just use it for
 					// mass and other settings
 					parent_collider.size = new Vector3(.1f, .1f, .1f);
 
-					Rigidbody rigidbody = f_go.AddComponent<Rigidbody>();
+					Rigidbody rigidbody = f_previewMesh.AddComponent<Rigidbody>();
 
 					if(areaRelativeMass)
 						rigidbody.mass = Triangulator.Area(points) * massModifier;
@@ -532,21 +530,21 @@ public class Draw : MonoBehaviour {
 						y2 = points[i+1].y;			
 					}
 
-					GameObject go = new GameObject();
-					go.name = "BoxCollider" + i;
-					go.AddComponent<BoxCollider>();
+					GameObject previewMesh = new GameObject();
+					previewMesh.name = "BoxCollider" + i;
+					previewMesh.AddComponent<BoxCollider>();
 					
-					go.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
+					previewMesh.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
 
 					Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );
 					
 					float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
 					float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
 
-					go.transform.localScale = new Vector3(length, .0001f, 1f);
-					go.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
+					previewMesh.transform.localScale = new Vector3(length, .0001f, 1f);
+					previewMesh.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
 
-					go.transform.parent = f_go.transform;
+					previewMesh.transform.parent = f_previewMesh.transform;
 				}
 			break;
 
@@ -555,10 +553,34 @@ public class Draw : MonoBehaviour {
 
 		}
 
-		generatedMeshes.Add (f_go);
+		generatedMeshes.Add (f_previewMesh);
 		CleanUp();
 	}
+#endregion
 
+#region MESH UTILITY
+
+	void CheckMaxMeshes() 
+	{
+		if(generatedMeshes.Count >= maxAllowedObjects && maxAllowedObjects > 0)
+		{
+			GameObject g = generatedMeshes[0];
+			generatedMeshes.RemoveAt(0);
+			Destroy(g);
+		}
+	}
+	
+	public void DestroyAllGeneratedMeshes()
+	{
+		for(int i = 0; i < generatedMeshes.Count; i++)
+		{
+			Destroy(generatedMeshes[i]);
+		}
+		generatedMeshes.Clear();
+	}
+#endregion
+
+#region OBJ EXPORT
 	///	<summary>
 	///	OBJ Export methods
 	///	</summary>
@@ -593,10 +615,10 @@ public class Draw : MonoBehaviour {
 			return "Index out of bounds.";
 	}
 
-	public string ExportOBJ(string path, GameObject go)
+	public string ExportOBJ(string path, GameObject previewMesh)
 	{
-		if(go.GetComponent<MeshFilter>())
-			return ExportOBJ(path, go.GetComponent<MeshFilter>());
+		if(previewMesh.GetComponent<MeshFilter>())
+			return ExportOBJ(path, previewMesh.GetComponent<MeshFilter>());
 		else
 			return "No mesh filter found.";
 	}
@@ -605,9 +627,11 @@ public class Draw : MonoBehaviour {
 	{
 		return ExportOBJ(path, generatedMeshes[generatedMeshes.Count-1]);
 	}
+#endregion
 
+#region IGNORE RECTS
 	/// <summary>
-	///	Ingore rect methods.
+	///	Ignore rect methods.
 	/// </summary>
 	public void IgnoreRect(Rect rect)
 	{
@@ -618,11 +642,10 @@ public class Draw : MonoBehaviour {
 	{
 		ignoreRect.Clear();
 	}
+#endregion
 
-
-	/// <summary>
-	/// Utility Methods
-	/// </summary>		
+#region UV
+	
 	Vector2[] CalculateUVs(Vector3[] v, Vector2 uvScale)
 	{
 		Vector2[] uvs = new Vector2[v.Length];
@@ -632,11 +655,22 @@ public class Draw : MonoBehaviour {
 		}
 		return uvs;
 	}
+#endregion
+
+#region MESH MATH UTILITY
+	public Vector3[] VerticesInWorldSpace(List<Vector2> points, float zPos)
+	{
+		Vector3[] v = new Vector3[points.Count];
+
+		for(int i = 0; i < points.Count; i++)
+			v[i] = transform.TransformPoint(new Vector3(points[i].x, points[i].y, zPos));
+		
+		return v;			
+	}
 	
 	// http://paulbourke.net/geometry/clockwise/index.html
-	Polygon Convexity(Vector2[] p, bool final)
+	Winding Convexity(Vector2[] p, bool final)
 	{
-//		string cheese = "";
 		bool isConcave = false;
 		
 		int n = p.Length;
@@ -662,32 +696,28 @@ public class Draw : MonoBehaviour {
 			if (flag == 3)
 				isConcave = true;
 
-//			cheese += z + "		" + flag + "\n";
 		}
 		
-		Polygon convexity;
+		Winding convexity;
 		if(isConcave == true || flag == 0) 
 		{
 			if(wind > 0)
-				convexity = Polygon.ConcaveCounterClockwise;
+				convexity = Winding.ConcaveCounterClockwise;
 			else
-				convexity = Polygon.ConcaveClockwise;
+				convexity = Winding.ConcaveClockwise;
 		}
 		else
 		{
 			if(wind > 0)
-				convexity = Polygon.ConvexCounterClockwise;
+				convexity = Winding.ConvexCounterClockwise;
 			else
-				convexity = Polygon.ConvexClockwise;
+				convexity = Winding.ConvexClockwise;
 		}
-
-//		if(final)
-//			Debug.Log(convexity + "\n" + "winding  " + wind + "\n" + cheese);
 
 		return convexity;
 	}
 
-	// http://www.gamedev.net/topic/548477-fast-2d-polygon-self-intersect-test/
+	// http://www.gamedev.net/topic/548477-fast-2d-Winding-self-intersect-test/
 	public bool SelfIntersectTest(List<Vector2> vertices)
 	{
 	    for (int i = 0; i < vertices.Count; ++i)
@@ -735,4 +765,5 @@ public class Draw : MonoBehaviour {
 	    }
 	    return false;
 	}
+#endregion
 }

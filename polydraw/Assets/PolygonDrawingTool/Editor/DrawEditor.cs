@@ -41,12 +41,13 @@ public class DrawEditor : Editor {
 
 		GUILayout.Label("Drawing Settings", EditorStyles.boldLabel);
 
-		script.showPointMarkers = EditorGUILayout.BeginToggleGroup("Show Vertice Markers", script.showPointMarkers);
+		script.showPointMarkers = EditorGUILayout.BeginToggleGroup("Show Vertex Markers", script.showPointMarkers);
 			script.pointMarker = (GameObject)EditorGUILayout.ObjectField("Point Marker", script.pointMarker, typeof(GameObject), true);
 		EditorGUILayout.EndToggleGroup();
 
 		script.drawMeshInProgress = EditorGUILayout.Toggle("Draw Preview Mesh", script.drawMeshInProgress);
 
+		script.lineRenderer = (LineRenderer)EditorGUILayout.ObjectField(new GUIContent("Trail Renderer", "If left null, a default trail renderer will be applied automatically."), script.lineRenderer, typeof(LineRenderer), true);
 		script.lineWidth = EditorGUILayout.FloatField("Trail Renderer Width", script.lineWidth);
 
 		script.useDistanceCheck = EditorGUILayout.BeginToggleGroup(new GUIContent("Use Distance Check", "If final user set point is greater than `x` distance from origin point, polygon will not be drawn"), script.useDistanceCheck);
@@ -59,9 +60,14 @@ public class DrawEditor : Editor {
 		
 		script.meshName = EditorGUILayout.TextField("Mesh Name", script.meshName);
 
-		script.generateSide = EditorGUILayout.Toggle("Generate Sides", script.generateSide);
+		script.material = (Material)EditorGUILayout.ObjectField("Material", script.material, typeof(Material), false);
 
-		script.material = (Material)EditorGUILayout.ObjectField("Material", script.material, typeof(Material), true);
+		script.generateSide = EditorGUILayout.BeginToggleGroup("Generate Sides", script.generateSide);
+
+			script.sideLength = EditorGUILayout.FloatField("Side Length", script.sideLength);
+			script.sideMaterial = (Material)EditorGUILayout.ObjectField("Side Material", script.sideMaterial, typeof(Material), false);
+
+		EditorGUILayout.EndToggleGroup();
 		
 		script.uvScale = EditorGUILayout.Vector2Field("UV Scale", script.uvScale);
 
