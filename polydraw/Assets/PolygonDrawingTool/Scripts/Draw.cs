@@ -81,6 +81,8 @@ public class Draw : MonoBehaviour
 	private List<GameObject> generatedMeshes = new List<GameObject>();
 	private int windingOrder; // Positive = CC , Negative = CW
 	Camera mainCamera;
+	private float boxColliderSize = .01f;
+
 #endregion
 
 #region ENUM
@@ -363,7 +365,9 @@ public class Draw : MonoBehaviour
 		finalMeshGameObject.GetComponent<MeshFilter>().sharedMesh = graphics;
 		finalMeshGameObject.AddComponent<MeshRenderer>();
 
-		Material[] mats = (generateSide) ? new Material[2] {material, sideMaterial} : new Material[1]{material};
+		Material[] mats = (generateSide) ? 
+			new Material[2] {material, sideMaterial} :
+			new Material[1] { material };
 
 		finalMeshGameObject.GetComponent<MeshRenderer>().sharedMaterials = mats;
 
@@ -409,7 +413,7 @@ public class Draw : MonoBehaviour
 
 					// the parent collider - don't allow it to be seen, just use it for
 					// mass and other settings
-					parent_collider.size = new Vector3(.1f, .1f, .1f);
+					parent_collider.size = new Vector3(.01f, .01f, .01f);
 
 					Rigidbody rigidbody = finalMeshGameObject.AddComponent<Rigidbody>();
 
@@ -457,7 +461,7 @@ public class Draw : MonoBehaviour
 					float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
 					float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
 
-					previewGameObject.transform.localScale = new Vector3(length, .0001f, 1f);
+					previewGameObject.transform.localScale = new Vector3(length, boxColliderSize, 1f);
 					previewGameObject.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
 
 					previewGameObject.transform.parent = finalMeshGameObject.transform;
@@ -476,13 +480,14 @@ public class Draw : MonoBehaviour
 	// Assumes local space.  Returns graphics mesh in the following submesh order:
 	// 0 - Front face
 	// 1 - Sides (optional)
-	// 2 - Back face (optional)
+	// 2 - Back face (planned)
 	void MeshWithPoints(out Mesh m, out Mesh c, PolygonType convexity)
 	{
 		m = new Mesh();
 		c = new Mesh();
 
 		Vector2[] points = userPoints.ToArray();
+		float half_sideLength = sideLength / 2f;
 
 		if(convexity == PolygonType.ConcaveClockwise || convexity == PolygonType.ConvexClockwise)
 			Array.Reverse(points);
@@ -492,14 +497,15 @@ public class Draw : MonoBehaviour
 		int[] front_indices = tr.Triangulate();
 	   
 		// Create the Vector3 vertices
-		List<Vector3> front_vertices = new List<Vector3>(VerticesWithPoints(userPoints, 0f));
+		List<Vector3> front_vertices = (generateSide) ?
+			new List<Vector3>(VerticesWithPoints(userPoints, -half_sideLength)) :
+			new List<Vector3>(VerticesWithPoints(userPoints, 0f));
 
 		List<Vector2> front_uv = ListMultiply(userPoints, uvScale);
 
 		/*** Finish Front Face ***/
 		
 		/*** Generate Sides ***/
-		float half_sideLength = sideLength / 2f;
 		List<Vector3> side_vertices = new List<Vector3>();
 		
 		for (int i=0; i < points.Length; i++) {
