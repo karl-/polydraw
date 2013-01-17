@@ -108,6 +108,11 @@ public class Draw : MonoBehaviour
 	void Start() {
 		if(inputCamera == null)
 			inputCamera = Camera.main;
+
+		// If we're not rendering with the camera used for input, set the ortho cam coordinates to match
+		// the coordinates drawn at the Z position of the perspective camera.
+		if(inputCamera != Camera.main)
+			SetOrthographioCameraDimensions(Camera.main, zPosition);
 	}
 #endregion
 
@@ -829,6 +834,20 @@ public class Draw : MonoBehaviour
 			}
 		}
 		return false;
+	}
+#endregion
+
+#region CAMERA
+	
+	public void SetOrthographioCameraDimensions(Camera perspCam, float zPos)
+	{
+		Vector3 tr = perspCam.ScreenToWorldPoint(new Vector3(perspCam.pixelWidth, perspCam.pixelHeight, zPos - perspCam.transform.position.z));
+		Vector3 bl = perspCam.ScreenToWorldPoint(new Vector3(0, 0, zPos - perspCam.transform.position.z));
+
+		inputCamera.orthographic = true;
+
+		// orthographicSize is Y
+		inputCamera.orthographicSize = (tr.y - bl.y) / 2f;
 	}
 #endregion
 }
