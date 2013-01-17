@@ -63,22 +63,21 @@ public class Draw : MonoBehaviour
 	public bool isKinematic = false;						///< If #applyRigidbody is true, this sets the isKinematic bool.
 	public bool useTag = false;								///< If true, the finalized mesh will have its tag set to #tagVal.  Note: Tag must exist prior to assignment.
 	public string tagVal = "drawnMesh";						///< The tag to applied to the final mesh.  See also #useTag.
-	public float zPosition = 0;								///< The Z position for all vertices.  Z is local to the Draw object, and thus it is recommended that the Draw object remain at world coordinates (0, 0, 0).
+	public float zPosition = 0;								///< The Z position for all vertices.  Z is local to the Draw object, and thus it is recommended that the Draw object remain at world coordinates (0, 0, 0).  By default, this done for you in the Start method.
 	public Vector2 uvScale = new Vector2(1f, 1f);			///< The scale to applied when creating UV coordinates.  Different from a material scale property (though that will also affect material layout).
 	public string meshName = "Drawn Mesh";					///< What the finalized mesh will be named.
 
-	public bool generateBoxColliders = false;
-	public ColliderStyle colliderStyle = ColliderStyle.BoxCollider;
-	public bool manualColliderDepth = false;
-	public float colDepth = 5f;
+	public ColliderStyle colliderStyle = ColliderStyle.BoxCollider;	///< The #ColliderStyle to be used.
+	public bool manualColliderDepth = false;				///< If #ColliderStyle is set to BoxCollider, this can override the #sideLength property to set collision depth.  See also #colDepth.
+	public float colDepth = 5f;								///< If #manualColliderDepth is toggled, this value will be used to determine depth of colliders.
 
 	bool placingPoint = false;
 	Vector3 previousMousePosition;
 	private float timer = 0f;
 	private List<GameObject> generatedMeshes = new List<GameObject>();
 	private int windingOrder; // Positive = CC , Negative = CW
-	public Camera inputCamera;
-	private float boxColliderSize = .01f;
+	public Camera inputCamera;								///< If using a Perspective camera, you will also need an orthographic camera to recieve input.  Assign an orthographic camera here.  Ortho camera Culling Mask should be set to Nothing, with Clear Flags set to Depth Only.
+	public float boxColliderSize = .01f;					///< Determines the thickness of the BoxColliders.  See also #ColliderStyle, #colDepth, #manualColliderDepth.
 
 #endregion
 
@@ -116,6 +115,10 @@ public class Draw : MonoBehaviour
 
 #region INITIALIZATION
 	void Start() {
+
+		transform.parent = null;
+		transform.position = Vector3.zero;
+
 		if(inputCamera == null)
 			inputCamera = Camera.main;
 
