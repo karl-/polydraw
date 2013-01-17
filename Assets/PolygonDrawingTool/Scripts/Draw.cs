@@ -472,6 +472,22 @@ public class Draw : MonoBehaviour
 						rigidbody.isKinematic = false;
 				}
 
+				if(generateSide)
+					colDepth = sideLength;
+
+				float zPos_collider = zPosition + faceOffset;
+				switch(anchor)
+				{
+					case Anchor.Front:
+						zPos_collider += sideLength/2f;
+						break;
+					case Anchor.Back:
+						zPos_collider -= sideLength/2f;
+						break;
+					default:
+						break;
+				}
+
 				for(int i = 0; i < points.Count; i++)
 				{
 					float x1, x2, y1, y2;
@@ -491,7 +507,7 @@ public class Draw : MonoBehaviour
 					boxColliderObj.name = "BoxCollider" + i;
 					boxColliderObj.AddComponent<BoxCollider>();
 					
-					boxColliderObj.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
+					boxColliderObj.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPos_collider);
 
 					Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );
 					
