@@ -26,23 +26,18 @@ public class Draw : MonoBehaviour
 #region MEMBERS
 	List<Vector2> userPoints = new List<Vector2>();
 	
-	/// <summary>
-	/// Draw Styles
-	/// </summary>
-	public DrawStyle drawStyle = DrawStyle.Continuous;
-	public int maxVertices = 4;		// Only applies to non-continuous drawing
-	public float samplingRate = .1f;
+	public DrawStyle drawStyle = DrawStyle.Continuous;		///< The DrawStyle to be used.
+	public int maxVertices = 4;								///< Maximum amount of vertices allowed per geometry.
+	public float samplingRate = 30f;						///< How many point samples to read per second.  Only applies to Continuous DrawStyles.
 
-	/// <summary>
-	/// Mesh In Progress
-	/// </summary>
-	public bool drawMeshInProgress = true;
-	public bool useDistanceCheck = false;
-	public float maxDistance = 5f;
-	public float closingDistance = .5f;
-	public float lineWidth = .1f;
-	public bool showPointMarkers = false;
-	public GameObject pointMarker;
+
+	public bool drawMeshInProgress = true;					///< Should a preview mesh be constructed as the user draws?
+	public bool useDistanceCheck = false;					///< If true, the final user point must be less than closingDistance away from origin point in order for a mesh to be drawn.  Does not affect preview meshes.
+	public float maxDistance = 5f;							///< If #useDistanceCheck is set to true, the final point must be within this distance of the origin point in order for a final mesh to constructed.  When using #DrawStyle ::ContinuousClosingDistance, this is automatically set to true.
+	public float closingDistance = .5f;						///< If #drawStyle is set to ContinuousClosingDistance (see #DrawStyle), the mesh will automatically finalize itself once a point is detected within the closingDistance of the origin point.
+	public float lineWidth = .1f;							///< If #lineRenderer is left unassigned, this is the width that will be used for an automatically generated LineRenderer.
+	public bool showPointMarkers = false;					///< If true, PolyDraw will instantiate #pointMarker's at vertex points while recieving input. 
+	public GameObject pointMarker;							///< GameObjects to be placed at vertex points as the input is recieved.  See also #showPointMarkers.
 	private List<GameObject> pointMarkers = new List<GameObject>();
 	private List<Rect> ignoreRect = new List<Rect>();
 	public LineRenderer lineRenderer;
@@ -74,9 +69,6 @@ public class Draw : MonoBehaviour
 	public ColliderStyle colliderStyle = ColliderStyle.BoxCollider;
 	public float colDepth = 5f;
 
-	/// <summary>
-	/// Internal
-	/// </summary>
 	bool placingPoint = false;
 	Vector3 previousMousePosition;
 	private float timer = 0f;
@@ -95,9 +87,12 @@ public class Draw : MonoBehaviour
 		ConcaveCounterClockwise
 	}
 
+	/**! Drawing style.  Dictates how user input is interpreted.
+	 * \enum Draw style.
+	 */
 	public enum DrawStyle {
 		Continuous,
-		ContinuousClosingDistance,
+		ContinuousClosingDistance,		///< Input read at samples (#samplingRate) per second, and finalizes mesh either on input ceasing or based on a distance check.  Also see #useDistanceCheck.
 		PointMaxVertex,
 		PointClosingDistance
 	}
@@ -138,8 +133,11 @@ public class Draw : MonoBehaviour
 					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
 					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
-					DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
-					
+					if(generateSide)
+						DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition - sideLength/2f) );
+					else
+						DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
+
 					AddPoint(worldPos);
 					
 					placingPoint = true;
@@ -181,7 +179,7 @@ public class Draw : MonoBehaviour
 			case DrawStyle.ContinuousClosingDistance:
 				if(Input.GetMouseButton(0))
 				{
-					if(timer > samplingRate || Input.GetMouseButtonDown(0))
+					if(timer > 1f/samplingRate || Input.GetMouseButtonDown(0))
 					{
 						timer = 0f;
 						
@@ -204,7 +202,7 @@ public class Draw : MonoBehaviour
 						}//mousepos check
 					}//mousedown			
 						
-						timer += 1 * Time.deltaTime;
+					timer += 1 * Time.deltaTime;
 				}
 					
 				if(Input.GetMouseButtonUp(0))
@@ -244,14 +242,17 @@ public class Draw : MonoBehaviour
 		}
 	}
 
-	void DestroyPointMarkers() {
-		for(int i = 0; i < pointMarkers.Count; i++) {
+	public void DestroyPointMarkers()
+	{
+		for(int i = 0; i < pointMarkers.Count; i++)
+		{
 			Destroy(pointMarkers[i]);
 		}
 		pointMarkers.Clear();
 	}
 
-	void DestroyLineRenderer() {
+	public void DestroyLineRenderer()
+	{
 		// if(gameObject.GetComponent<LineRenderer>() != null)
 			// Destroy(gameObject.GetComponent<LineRenderer>());
 		if(lineRenderer != null)
@@ -260,7 +261,8 @@ public class Draw : MonoBehaviour
 		}
 	}
 	
-	void AddPoint(Vector3 position) {
+	void AddPoint(Vector3 position)
+	{
 		if(showPointMarkers)
 			pointMarkers.Add( (GameObject)GameObject.Instantiate(pointMarker, position, new Quaternion(0f,0f,0f,0f)) );
 
@@ -269,15 +271,20 @@ public class Draw : MonoBehaviour
 		RefreshPreview();
 	}
 	
-	void RefreshPreview() {
+	void RefreshPreview()
+	{
 		if(showPointMarkers)
 			pointMarkers[pointMarkers.Count-1].transform.position = userPoints[userPoints.Count-1];
 
-		if(userPoints.Count > 1) {			
+		if(userPoints.Count > 1)
+		{			
 			if(drawMeshInProgress)
 				DrawTempMesh(userPoints);
 
-			DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
+			if(generateSide)
+				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition - sideLength/2f) );
+			else
+				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );		
 		}
 	}	
 	
@@ -320,14 +327,17 @@ public class Draw : MonoBehaviour
 		MeshWithPoints(out m, out c, convexity);
 
 		previewGameObject.GetComponent<MeshFilter>().sharedMesh = m;
-		previewGameObject.GetComponent<MeshRenderer>().material = material;
+		Material[] mats = (generateSide) ? 
+			new Material[2] {material, sideMaterial} :
+			new Material[1] { material };
+		previewGameObject.GetComponent<MeshRenderer>().sharedMaterials = mats;
 	}
 	
 	/// <summary>
 	/// Draws the final mesh, creating a new GameObject.
 	/// </summary>
 	/// <param name='points'>
-	/// Points.
+	/// A list of X,Y points in local space to be translated into vertex data.
 	/// </param>
 	void DrawFinalMesh(List<Vector2> points)
 	{
