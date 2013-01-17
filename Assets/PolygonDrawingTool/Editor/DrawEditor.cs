@@ -64,6 +64,8 @@ public class DrawEditor : Editor {
 
 		script.material = (Material)EditorGUILayout.ObjectField("Material", script.material, typeof(Material), false);
 
+		script.anchor = (Draw.Anchor)EditorGUILayout.EnumPopup("Mesh Anchor", script.anchor);
+
 		script.generateSide = EditorGUILayout.BeginToggleGroup("Generate Sides", script.generateSide);
 
 			script.sideLength = EditorGUILayout.FloatField("Side Length", script.sideLength);
