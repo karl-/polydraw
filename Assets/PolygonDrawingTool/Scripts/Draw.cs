@@ -35,38 +35,37 @@ public class Draw : MonoBehaviour
 	public bool useDistanceCheck = false;					///< If true, the final user point must be less than closingDistance away from origin point in order for a mesh to be drawn.  Does not affect preview meshes.
 	public float maxDistance = 5f;							///< If #useDistanceCheck is set to true, the final point must be within this distance of the origin point in order for a final mesh to constructed.  When using #DrawStyle ::ContinuousClosingDistance, this is automatically set to true.
 	public float closingDistance = .5f;						///< If #drawStyle is set to ContinuousClosingDistance (see #DrawStyle), the mesh will automatically finalize itself once a point is detected within the closingDistance of the origin point.
-	public float lineWidth = .1f;							///< If #lineRenderer is left unassigned, this is the width that will be used for an automatically generated LineRenderer.
 	public bool showPointMarkers = false;					///< If true, PolyDraw will instantiate #pointMarker's at vertex points while recieving input. 
 	public GameObject pointMarker;							///< GameObjects to be placed at vertex points as the input is recieved.  See also #showPointMarkers.
 	private List<GameObject> pointMarkers = new List<GameObject>();
 	private List<Rect> ignoreRect = new List<Rect>();
-	public LineRenderer lineRenderer;
 
+	public bool drawLineRenderer = true;					///< If true, a LineRenderer will be drawn while taking input.  See also #lineRenderer and #lineWidth.
+	public LineRenderer lineRenderer;						///< The LineRenderer to use when drawing.  If left null, a default line renderer will be created.
+	public float lineWidth = .1f;							///< If #lineRenderer is left unassigned, this is the width that will be used for an automatically generated LineRenderer.
 
-	///Final Mesh Settings
-	public Material material;
-	public int maxAllowedObjects = 4;
-	public bool generateMeshCollider = true;
+	public Material material;								///< The material to be applied to the front face of the mesh.
+	public int maxAllowedObjects = 4;						///< The maximum amount of meshes allowed on screen at any time.  Meshes will be deleted as new objects are drawn, in the order of oldest to newest.
 
 	// Sides
-	public bool generateSide = false;
-	public float sideLength = 5f;
-	public Anchor anchor = Anchor.Center;
+	public bool generateSide = false;						///< If true, sides will be created along with the front face.
+	public float sideLength = 5f;							///< How long the sides will be.
+	public Anchor anchor = Anchor.Center;					///< Where is the pivot point of this mesh?  See #Anchor for more information.
 	public float faceOffset = 0f;							///< This value is used to offset the anchor.  As an example, a faceOffset of 1f with a #zPosition of 0f would set the front face at Vector3(x, y, 1f).  With #SideAnchor Center and a faceOffset of 0, the front face is set to exactly 1/2 negative distance (towards the camera) of sideLength.   
-	public Material sideMaterial;
+	public Material sideMaterial;							///< The material to be applied to the sides of the mesh.
 
-	public bool forceConvex = false;
-	public bool applyRigidbody = true;
-	public bool areaRelativeMass = true;
-	public float massModifier = 1f;
-	public float mass = 25f;
-	public bool useGravity = true;
-	public bool isKinematic = false;
-	public bool useTag = false;
-	public string tagVal = "drawnMesh";
-	public float zPosition = 0;
-	public Vector2 uvScale = new Vector2(1f, 1f);
-	public string meshName = "Drawn Mesh";
+	public bool forceConvex = false;						///< If a MeshCollider is used, this can force the collision bounds to convex.
+	public bool applyRigidbody = true;						///< If true, a RigidBody will be applied to the final mesh.  Does not apply to preview mesh.
+	public bool areaRelativeMass = true;					///< If true, the mass of this final object will be relative to the area of the front face.  Mass is calculated as (area * #massModifier).
+	public float massModifier = 1f;							///< The amount to multipy mesh area by when calculating mass.  See also #areaRelativeMass.
+	public float mass = 25f;								///< If #areaRelativeMass is false, this value will be used when setting RigidBody mass.  See also #applyRigidbody.
+	public bool useGravity = true;							///< If #applyRigidbody is true, this determines if gravity will be applied.
+	public bool isKinematic = false;						///< If #applyRigidbody is true, this sets the isKinematic bool.
+	public bool useTag = false;								///< If true, the finalized mesh will have its tag set to #tagVal.  Note: Tag must exist prior to assignment.
+	public string tagVal = "drawnMesh";						///< The tag to applied to the final mesh.  See also #useTag.
+	public float zPosition = 0;								///< The Z position for all vertices.  Z is local to the Draw object, and thus it is recommended that the Draw object remain at world coordinates (0, 0, 0).
+	public Vector2 uvScale = new Vector2(1f, 1f);			///< The scale to applied when creating UV coordinates.  Different from a material scale property (though that will also affect material layout).
+	public string meshName = "Drawn Mesh";					///< What the finalized mesh will be named.
 
 	public bool generateBoxColliders = false;
 	public ColliderStyle colliderStyle = ColliderStyle.BoxCollider;
@@ -148,24 +147,6 @@ public class Draw : MonoBehaviour
 				{
 					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
 					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
-
-					// if(generateSide) {
-					// 	// switch(anchor)
-					// 	// {
-					// 	// 	case Anchor.Center:
-					// 	// 		DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset - sideLength/2f) );
-					// 	// 		break;
-					// 	// 	case Anchor.Front:
-					// 	// 		DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset - sideLength/2f) );
-					// 	// 		break;
-					// 	// 	case Anchor.Back:
-					// 	// 		DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset + sideLength) );
-					// 	// 		break;
-					// 	// }
-					// 	DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );
-
-					// } else
-					// 	DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );
 
 					AddPoint(worldPos);
 					
@@ -282,12 +263,8 @@ public class Draw : MonoBehaviour
 
 	public void DestroyLineRenderer()
 	{
-		// if(gameObject.GetComponent<LineRenderer>() != null)
-			// Destroy(gameObject.GetComponent<LineRenderer>());
 		if(lineRenderer != null)
-		{
 			lineRenderer.SetVertexCount(0);		
-		}
 	}
 	
 	void AddPoint(Vector3 position)
@@ -310,7 +287,8 @@ public class Draw : MonoBehaviour
 			if(drawMeshInProgress)
 				DrawTempMesh(userPoints);
 
-			DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );		
+			if(drawLineRenderer)
+				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );		
 		}
 	}	
 	
