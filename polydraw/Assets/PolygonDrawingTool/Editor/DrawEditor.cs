@@ -49,9 +49,11 @@ public class DrawEditor : Editor {
 
 		script.drawMeshInProgress = EditorGUILayout.Toggle("Draw Preview Mesh", script.drawMeshInProgress);
 
-		script.lineRenderer = (LineRenderer)EditorGUILayout.ObjectField(new GUIContent("Trail Renderer", "If left null, a default trail renderer will be applied automatically."), script.lineRenderer, typeof(LineRenderer), true);
-		if(script.lineRenderer == null)
-			script.lineWidth = EditorGUILayout.FloatField("Trail Renderer Width", script.lineWidth);
+		script.drawLineRenderer = EditorGUILayout.BeginToggleGroup("Draw Line Renderer", script.drawLineRenderer);
+			script.lineRenderer = (LineRenderer)EditorGUILayout.ObjectField(new GUIContent("Trail Renderer", "If left null, a default trail renderer will be applied automatically."), script.lineRenderer, typeof(LineRenderer), true);
+			if(script.lineRenderer == null)
+				script.lineWidth = EditorGUILayout.FloatField("Trail Renderer Width", script.lineWidth);
+		EditorGUILayout.EndToggleGroup();
 
 		script.useDistanceCheck = EditorGUILayout.BeginToggleGroup(new GUIContent("Use Distance Check", "If final user set point is greater than `x` distance from origin point, polygon will not be drawn"), script.useDistanceCheck);
 			script.maxDistance = EditorGUILayout.FloatField("Max Distance from Origin", script.maxDistance);
