@@ -48,8 +48,11 @@ public class Draw : MonoBehaviour
 	public int maxAllowedObjects = 4;
 	public bool generateMeshCollider = true;
 
+	// Sides
 	public bool generateSide = false;
 	public float sideLength = 5f;
+	public Anchor anchor = Anchor.Center;
+	public float faceOffset = 0f;							///< This value is used to offset the anchor.  As an example, a faceOffset of 1f with a #zPosition of 0f would set the front face at Vector3(x, y, 1f).  With #SideAnchor Center and a faceOffset of 0, the front face is set to exactly 1/2 negative distance (towards the camera) of sideLength.   
 	public Material sideMaterial;
 
 	public bool forceConvex = false;
@@ -87,8 +90,9 @@ public class Draw : MonoBehaviour
 		ConcaveCounterClockwise
 	}
 
-	/**! Drawing style.  Dictates how user input is interpreted.
-	 * \enum Draw style.
+	/**
+	 *  \brief Dictates how user input is interpreted.
+	 *	See also #drawStyle.
 	 */
 	public enum DrawStyle {
 		Continuous,
@@ -97,6 +101,12 @@ public class Draw : MonoBehaviour
 		PointClosingDistance
 	}
 	
+	public enum Anchor {
+		Center,
+		Back,
+		Front
+	}
+
 	public enum ColliderStyle {
 		BoxCollider,
 		MeshCollider,
@@ -138,10 +148,23 @@ public class Draw : MonoBehaviour
 					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
 					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
-					if(generateSide)
-						DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition - sideLength/2f) );
-					else
-						DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );
+					// if(generateSide) {
+					// 	// switch(anchor)
+					// 	// {
+					// 	// 	case Anchor.Center:
+					// 	// 		DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset - sideLength/2f) );
+					// 	// 		break;
+					// 	// 	case Anchor.Front:
+					// 	// 		DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset - sideLength/2f) );
+					// 	// 		break;
+					// 	// 	case Anchor.Back:
+					// 	// 		DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset + sideLength) );
+					// 	// 		break;
+					// 	// }
+					// 	DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );
+
+					// } else
+					// 	DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );
 
 					AddPoint(worldPos);
 					
@@ -286,10 +309,7 @@ public class Draw : MonoBehaviour
 			if(drawMeshInProgress)
 				DrawTempMesh(userPoints);
 
-			if(generateSide)
-				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition - sideLength/2f) );
-			else
-				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition) );		
+			DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );		
 		}
 	}	
 	
@@ -347,11 +367,6 @@ public class Draw : MonoBehaviour
 	void DrawFinalMesh(List<Vector2> points)
 	{
 		DestroyTempGameObject();
-	
-		string str = "";
-		foreach(Vector2 v in points)
-			str += "" + v.ToString() + "\n";
-		Debug.Log(str);
 
 		if(points.Count < 3 || ((points[0] - points[points.Count - 1]).sqrMagnitude > maxDistance && useDistanceCheck) )
 		{
@@ -472,21 +487,21 @@ public class Draw : MonoBehaviour
 						y2 = points[i+1].y;			
 					}
 
-					GameObject previewGameObject = new GameObject();
-					previewGameObject.name = "BoxCollider" + i;
-					previewGameObject.AddComponent<BoxCollider>();
+					GameObject boxColliderObj = new GameObject();
+					boxColliderObj.name = "BoxCollider" + i;
+					boxColliderObj.AddComponent<BoxCollider>();
 					
-					previewGameObject.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
+					boxColliderObj.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
 
 					Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );
 					
 					float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
 					float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
 
-					previewGameObject.transform.localScale = new Vector3(length, boxColliderSize, colDepth);
-					previewGameObject.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
+					boxColliderObj.transform.localScale = new Vector3(length, boxColliderSize, colDepth);
+					boxColliderObj.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
 
-					previewGameObject.transform.parent = finalMeshGameObject.transform;
+					boxColliderObj.transform.parent = finalMeshGameObject.transform;
 				}
 			break;
 
@@ -509,7 +524,23 @@ public class Draw : MonoBehaviour
 		c = new Mesh();
 
 		Vector2[] points = userPoints.ToArray();
-		float half_sideLength = sideLength / 2f;
+		float zOrigin;
+		float halfSideLength = sideLength/2f;
+		switch(anchor)
+		{
+			case Anchor.Front:
+			 	zOrigin = zPosition + faceOffset + sideLength / 2f;
+				break;
+		
+			case Anchor.Back:
+			 	zOrigin = zPosition + faceOffset - sideLength / 2f;
+				break;
+
+			case Anchor.Center:
+			default:
+			 	zOrigin = zPosition + faceOffset;
+				break;	
+		}
 
 		if(convexity == PolygonType.ConcaveClockwise || convexity == PolygonType.ConvexClockwise)
 			Array.Reverse(points);
@@ -519,9 +550,7 @@ public class Draw : MonoBehaviour
 		int[] front_indices = tr.Triangulate();
 	   
 		// Create the Vector3 vertices
-		List<Vector3> front_vertices = (generateSide) ?
-			new List<Vector3>(VerticesWithPoints(userPoints, -half_sideLength)) :
-			new List<Vector3>(VerticesWithPoints(userPoints, 0f));
+		List<Vector3> front_vertices = new List<Vector3>(VerticesWithPoints(userPoints, zOrigin - halfSideLength));
 
 		List<Vector2> front_uv = ListMultiply(userPoints, uvScale);
 
@@ -531,14 +560,14 @@ public class Draw : MonoBehaviour
 		List<Vector3> side_vertices = new List<Vector3>();
 		
 		for (int i=0; i < points.Length; i++) {
-			side_vertices.Add( new Vector3( points[i].x, points[i].y, half_sideLength) );
-			side_vertices.Add( new Vector3( points[i].x, points[i].y, -half_sideLength) );
+			side_vertices.Add( new Vector3( points[i].x, points[i].y, zOrigin + halfSideLength) );
+			side_vertices.Add( new Vector3( points[i].x, points[i].y, zOrigin - halfSideLength) );
 		}
 		
 		// these sit right on the first two.  they don't share cause that would screw with
 		// the lame way uvs are made.
-		side_vertices.Add( new Vector3( points[0].x, points[0].y, half_sideLength ) );
-		side_vertices.Add( new Vector3( points[0].x, points[0].y, -half_sideLength ) );
+		side_vertices.Add( new Vector3( points[0].x, points[0].y, zOrigin + halfSideLength) );
+		side_vertices.Add( new Vector3( points[0].x, points[0].y, zOrigin - halfSideLength) );
 		
 		// +6 connects it to the first 2 verts
 		int[] side_indices = new int[(side_vertices.Count*3)];
