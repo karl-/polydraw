@@ -50,7 +50,8 @@ public class DrawEditor : Editor {
 		script.drawMeshInProgress = EditorGUILayout.Toggle("Draw Preview Mesh", script.drawMeshInProgress);
 
 		script.lineRenderer = (LineRenderer)EditorGUILayout.ObjectField(new GUIContent("Trail Renderer", "If left null, a default trail renderer will be applied automatically."), script.lineRenderer, typeof(LineRenderer), true);
-		script.lineWidth = EditorGUILayout.FloatField("Trail Renderer Width", script.lineWidth);
+		if(script.lineRenderer == null)
+			script.lineWidth = EditorGUILayout.FloatField("Trail Renderer Width", script.lineWidth);
 
 		script.useDistanceCheck = EditorGUILayout.BeginToggleGroup(new GUIContent("Use Distance Check", "If final user set point is greater than `x` distance from origin point, polygon will not be drawn"), script.useDistanceCheck);
 			script.maxDistance = EditorGUILayout.FloatField("Max Distance from Origin", script.maxDistance);
@@ -65,6 +66,10 @@ public class DrawEditor : Editor {
 		script.material = (Material)EditorGUILayout.ObjectField("Material", script.material, typeof(Material), false);
 
 		script.anchor = (Draw.Anchor)EditorGUILayout.EnumPopup("Mesh Anchor", script.anchor);
+
+		script.zPosition = EditorGUILayout.FloatField("Z Origin", script.zPosition);
+
+		script.faceOffset = EditorGUILayout.FloatField(new GUIContent("Z Offset", "Allows for custom offsets.  See docs for details."), script.faceOffset);
 
 		script.generateSide = EditorGUILayout.BeginToggleGroup("Generate Sides", script.generateSide);
 
@@ -86,7 +91,16 @@ public class DrawEditor : Editor {
 		script.colliderStyle = (Draw.ColliderStyle)EditorGUILayout.EnumPopup(new GUIContent("Collison", "If set to mesh, a Mesh Collider will be applied.  If set to Box, a series of thin box colliders will be generated bordering the edges, allowing for concave interactions.  None means no collider will be applied."), script.colliderStyle);
 
 		if(script.colliderStyle == Draw.ColliderStyle.BoxCollider)
-			script.colDepth = EditorGUILayout.FloatField("Collider Depth", script.colDepth);
+		{
+			if(!script.manualColliderDepth)
+				script.colDepth = script.sideLength;
+
+			script.manualColliderDepth = EditorGUILayout.BeginToggleGroup(new GUIContent("Manual Collider Depth", "If false, the side length will be used as the depth value."), script.manualColliderDepth);
+
+				script.colDepth = EditorGUILayout.FloatField("Collider Depth", script.colDepth);
+
+			EditorGUILayout.EndToggleGroup();
+		}
 
 		switch(script.colliderStyle) {
 			case Draw.ColliderStyle.BoxCollider:
