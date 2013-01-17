@@ -70,6 +70,7 @@ public class Draw : MonoBehaviour
 
 	public bool generateBoxColliders = false;
 	public ColliderStyle colliderStyle = ColliderStyle.BoxCollider;
+	public bool manualColliderDepth = false;
 	public float colDepth = 5f;
 
 	bool placingPoint = false;
@@ -472,7 +473,7 @@ public class Draw : MonoBehaviour
 						rigidbody.isKinematic = false;
 				}
 
-				if(generateSide)
+				if(!manualColliderDepth)
 					colDepth = sideLength;
 
 				float zPos_collider = zPosition + faceOffset;
