@@ -542,15 +542,15 @@ public class Draw : MonoBehaviour
 
 		if(convexity == PolygonType.ConcaveClockwise || convexity == PolygonType.ConvexClockwise)
 			Array.Reverse(points);
-		
+
 		/*** Generate Front Face ***/
-		Triangulator tr = new Triangulator(userPoints.ToArray());
+		Triangulator tr = new Triangulator(points);
 		int[] front_indices = tr.Triangulate();
 	   
 		// Create the Vector3 vertices
-		List<Vector3> front_vertices = new List<Vector3>(VerticesWithPoints(userPoints, zOrigin - halfSideLength));
+		List<Vector3> front_vertices = new List<Vector3>(VerticesWithPoints(points, zOrigin - halfSideLength));
 
-		List<Vector2> front_uv = ListMultiply(userPoints, uvScale);
+		List<Vector2> front_uv = ArrayMultiply(points, uvScale);
 
 		/*** Finish Front Face ***/
 		
@@ -727,10 +727,12 @@ public class Draw : MonoBehaviour
 		return uvs;
 	}
 
-	List<Vector2> ListMultiply(List<Vector2> uvs, Vector2 mult)
+	List<Vector2> ArrayMultiply(Vector2[] _uvs, Vector2 _mult)
 	{
-		for(int i = 0; i < uvs.Count; i++)
-			uvs[i].Scale(mult);
+		List<Vector2> uvs = new List<Vector2>();
+		for(int i = 0; i < _uvs.Length; i++) {
+			uvs.Add( Vector2.Scale(_uvs[i], _mult) );
+		}
 		return uvs;
 	}
 #endregion
@@ -746,12 +748,12 @@ public class Draw : MonoBehaviour
 		return v;			
 	}
 
-	public Vector3[] VerticesWithPoints(List<Vector2> points, float zPos)
+	public Vector3[] VerticesWithPoints(Vector2[] _points, float _zPos)
 	{
-		Vector3[] v = new Vector3[points.Count];
+		Vector3[] v = new Vector3[_points.Length];
 		
-		for(int i = 0; i < points.Count; i++)
-			v[i] = new Vector3(points[i].x, points[i].y, zPos);
+		for(int i = 0; i < _points.Length; i++)
+			v[i] = new Vector3(_points[i].x, _points[i].y, _zPos);
 		return v;
 	}
 
