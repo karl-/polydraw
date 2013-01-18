@@ -47,6 +47,7 @@
      <Compile Include="Assets\Doxygen\Editor\DoxygenWindow.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Editor\Debug\SublimeProjectEditor.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Editor\DrawEditor.cs" />
+     <None Include="Assets\PolygonDrawingTool\Example\Art Credits.txt" />
      <None Include="Assets\Doxygen\Editor\Resources\BaseDoxyfile.txt" />
      <None Include="Assets\Doxygen\ReadMe.txt" />
      <None Include="Assets\PolygonDrawingTool\PolyDraw Documentation.txt" />

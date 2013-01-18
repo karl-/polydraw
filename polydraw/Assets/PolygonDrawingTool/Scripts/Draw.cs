@@ -79,13 +79,16 @@ public class Draw : MonoBehaviour
 	public Camera inputCamera;								///< If using a Perspective camera, you will also need an orthographic camera to recieve input.  Assign an orthographic camera here.  Ortho camera Culling Mask should be set to Nothing, with Clear Flags set to Depth Only.
 	public float boxColliderSize = .01f;					///< Determines the thickness of the BoxColliders.  See also #ColliderStyle, #colDepth, #manualColliderDepth.
 
+	///< Returns the last drawn object, or null if no objects drawn.
+	public GameObject LastDrawnObject { get { return (generatedMeshes.Count > 0) ? generatedMeshes[generatedMeshes.Count-1] : null; } }
+
 #endregion
 
 #region ENUM
 	/** Describes polygon convexity and winding order.
 	 *
 	 */
-	enum PolygonType {
+	public enum PolygonType {
 		ConvexClockwise,
 		ConvexCounterClockwise,
 		ConcaveClockwise,
@@ -551,6 +554,9 @@ public class Draw : MonoBehaviour
 		}
 
 		generatedMeshes.Add (finalMeshGameObject);
+
+		DrawEdgePlanes(_points, convexity, new Vector2(.4f, 1.2f));
+
 		CleanUp();
 	}
 
@@ -639,7 +645,7 @@ public class Draw : MonoBehaviour
 		}
 		/*** Finish Generating Sides ***/
 
-		List<Vector2> side_uv = new List<Vector2>(CalcSideUVs(side_vertices));
+		List<Vector2> side_uv = CalcSideUVs(side_vertices);
 
 		m.Clear();
 		m.vertices = generateSide ? front_vertices.Concat(side_vertices).ToArray() : front_vertices.ToArray();
@@ -662,13 +668,93 @@ public class Draw : MonoBehaviour
 		c.RecalculateNormals();
 		c.RecalculateBounds();
 	}
+
+	/**
+	 *	\brief Returns a quad.
+	 *	\returns A quad plane.
+	 */
+	public Mesh MeshPlane()
+	{
+		Mesh m = new Mesh();
+		m.vertices = new Vector3[4] {
+			new Vector3(-.5f, 0f, 0f),
+			new Vector3(.5f, 0f, 0f),
+			new Vector3(-.5f, -1f, 0f),
+			new Vector3(.5f, -1f, 0f)
+		};
+
+		m.triangles = new int[6] {
+			2, 1, 0,
+			1, 3, 2
+		};
+
+		m.RecalculateNormals();
+
+		return m;
+	}
+#endregion
+
+#region FLOURISHES
+
+	/**
+	 *	\brief Draws planes around the edges of a mesh.
+	 *	@param _points The points to use as a guide.
+	 *	@param _modifier Multiply plane X and Y dimensions component wise.
+	 */
+	public void DrawEdgePlanes(List<Vector2> _points, PolygonType convexity, Vector2 _modifier)
+	{
+		Vector2[] points = _points.ToArray();
+
+		if(convexity == PolygonType.ConcaveClockwise || convexity == PolygonType.ConvexClockwise)
+			Array.Reverse(points);
+
+		for(int i = 0; i < points.Length; i++)
+		{
+			float x1, x2, y1, y2;
+			x1 = points[i].x;
+			y1 = points[i].y;
+
+			if(i > points.Length-2) {
+				x2 = points[0].x;
+				y2 = points[0].y;
+			}
+			else {
+				x2 = points[i+1].x;
+				y2 = points[i+1].y;			
+			}
+
+			GameObject boxColliderObj = new GameObject();
+			
+			boxColliderObj.AddComponent<MeshFilter>().sharedMesh = MeshPlane();
+			boxColliderObj.AddComponent<MeshRenderer>();
+
+			boxColliderObj.name = "EdgePlane " + i;
+
+			boxColliderObj.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
+
+			Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );
+			
+			float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
+
+			float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
+		
+			Vector3 nrml = Vector3.Cross(new Vector3(x1, y1, 0f), new Vector3(x2, y2, 0f));
+			
+			Debug.Log( (int)angle%360 );
+
+			boxColliderObj.transform.localScale = new Vector3(length, 1f, 2f);
+			boxColliderObj.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
+
+			boxColliderObj.transform.parent = LastDrawnObject.transform;
+		}		
+	}
 #endregion
 
 #region MESH UTILITY
 
 	/**
-	 *	\brief Checks the count of generated objects against #maxAllowedObject.
-	 *	If the amount of generated objects is greater than the #maxAllowedObject count, the earliest drawn object is deleted.
+	 *	\brief Checks the count of generated objects against #maxAllowedObjects.
+	 *	If the amount of generated objects is greater than the #maxAllowedObjects count, the earliest drawn object is deleted.
 	 */
 	public void CheckMaxMeshes() 
 	{
@@ -695,7 +781,13 @@ public class Draw : MonoBehaviour
 
 #region OBJ EXPORT
 
-	
+	/**
+	 *	\brief Exports an OBJ file to the supplied path.
+	 *	Files sharing a path name will not be ovewritten.
+ 	 *	\returns The path to the generated OBJ file.
+	 *	@param path The file path to save the resulting OBJ to.
+	 *	@param mf The MeshFilter to convert to an OBJ.
+	 */
 	public string ExportOBJ(string path, MeshFilter mf)
 	{
 		if(File.Exists(path)) {
@@ -710,7 +802,11 @@ public class Draw : MonoBehaviour
 		return path;
 	}
 
-	// Export all meshes
+	/**
+	 *	\brief Exports all generated meshes to an OBJ file.
+	 *	\returns The path to the generated OBJ file.
+	 *	@param path The file path to save resulting OBJs to.
+	 */
 	public string ExportOBJ(string path)
 	{
 		for(int i = 0; i < generatedMeshes.Count; i++)
@@ -719,7 +815,7 @@ public class Draw : MonoBehaviour
 		return path;
 	}
 
-	public string ExportOBJ(string path, int index)
+	string ExportOBJ(string path, int index)
 	{
 		if(index < generatedMeshes.Count)
 			return ExportOBJ(path, generatedMeshes[index]);
@@ -727,14 +823,25 @@ public class Draw : MonoBehaviour
 			return "Index out of bounds.";
 	}
 
-	public string ExportOBJ(string path, GameObject previewGameObject)
+	/**
+	 *	\brief Accepts a gameObject and returns the resulting file path.
+  	 *	\returns The path to the generated OBJ file.
+	 *	@param path The file path to save resulting OBJ to.
+	 *	@param go The gameObject to extract mesh data from.
+	 */
+	public string ExportOBJ(string path, GameObject go)
 	{
-		if(previewGameObject.GetComponent<MeshFilter>())
-			return ExportOBJ(path, previewGameObject.GetComponent<MeshFilter>());
+		if(go.GetComponent<MeshFilter>())
+			return ExportOBJ(path, go.GetComponent<MeshFilter>());
 		else
 			return "No mesh filter found.";
 	}
 
+	/**
+	 *	\brief Exports the last drawn object to the specified path.
+	 *	\returns The path to the generated OBJ file.
+	 *	@param path The file path to save resulting OBJ to.
+	 */
 	public string ExportCurrent(string path)
 	{
 		return ExportOBJ(path, generatedMeshes[generatedMeshes.Count-1]);
@@ -742,14 +849,29 @@ public class Draw : MonoBehaviour
 #endregion
 
 #region IGNORE RECTS
-	/// <summary>
-	///	Ignore rect methods.
-	/// </summary>
+	
+	/**
+	 *	\brief Adds passed Rect to the list of screen rects to ignore input from.
+	 *	Input will not be taken from all specified rects in the ignore list.
+	 *	@param rect The rect to add to the ignore list.
+	 */	
 	public void IgnoreRect(Rect rect)
 	{
 		ignoreRect.Add(rect);
 	}
 
+	/**
+	 *	\brief Removes supplied Rect from ignore rect list if it exists.
+	 *	@param rect The rect value to remove.
+	 */
+	public void RemoveFromIgnoreList(Rect rect)
+	{
+		ignoreRect.Remove(rect);
+	}
+
+	/**
+	 * \brief Clears all rects from ignore list.
+	 */
 	public void ClearIgnoreRects()
 	{
 		ignoreRect.Clear();
@@ -759,7 +881,7 @@ public class Draw : MonoBehaviour
 #region UV
 	
 	// A little hacky, yes, but it works well enough to pass
-	Vector2[] CalcSideUVs(List<Vector3> v)
+	List<Vector2> CalcSideUVs(List<Vector3> v)
 	{
 		// we konw that vertices are generated in rows, in a ccwise manner.
 		// this method figures out dist between rows, and uses the known 
@@ -780,7 +902,7 @@ public class Draw : MonoBehaviour
 			uvs[i+1] = new Vector2(curX, v[i+1].z);
 		}
 
-		return uvs;
+		return ArrayMultiply(uvs, uvScale);
 	}
 
 	List<Vector2> ArrayMultiply(Vector2[] _uvs, Vector2 _mult)
@@ -794,26 +916,39 @@ public class Draw : MonoBehaviour
 #endregion
 
 #region MESH MATH UTILITY
-	public Vector3[] VerticesInWorldSpace(List<Vector2> points, float zPos)
-	{
-		Vector3[] v = new Vector3[points.Count];
 
-		for(int i = 0; i < points.Count; i++)
-			v[i] = transform.TransformPoint(new Vector3(points[i].x, points[i].y, zPos));
+	/**
+	 *	\brief Takes list of user points and converts them to world points.
+	 *	\returns A Vector3 array of resulting world points.
+	 *	@param _points The user points to convert to world space.  Relative to Draw gameObject.
+	 *	@param _zPosition The Z position to anchor points to.  Not affected by #faceOffset at this point.
+	 */
+	public Vector3[] VerticesInWorldSpace(List<Vector2> _points, float _zPosition)
+	{
+		Vector3[] v = new Vector3[_points.Count];
+
+		for(int i = 0; i < _points.Count; i++)
+			v[i] = transform.TransformPoint(new Vector3(_points[i].x, _points[i].y, _zPosition));
 		
 		return v;			
 	}
 
-	public Vector3[] VerticesWithPoints(Vector2[] _points, float _zPos)
+	/**
+	 *	\brief Takes list of user points and converts them to Vector3 points with supplied Z value.
+	 *	\returns A Vector3 array of resulting points.
+	 *	@param _points The user points to convert to world space.  Relative to Draw gameObject.
+	 *	@param _zPosition The Z position to anchor points to.  Not affected by #faceOffset at this point.
+	 */
+	public Vector3[] VerticesWithPoints(Vector2[] _points, float _zPosition)
 	{
 		Vector3[] v = new Vector3[_points.Length];
 		
 		for(int i = 0; i < _points.Length; i++)
-			v[i] = new Vector3(_points[i].x, _points[i].y, _zPos);
+			v[i] = new Vector3(_points[i].x, _points[i].y, _zPosition);
 		return v;
 	}
 
-	public int[] ShiftTriangles(int[] tris, int offset)
+	int[] ShiftTriangles(int[] tris, int offset)
 	{
 		int[] shifted = new int[tris.Length];
 
@@ -823,9 +958,15 @@ public class Draw : MonoBehaviour
 		return shifted;
 	}
 	
-	// http://paulbourke.net/geometry/clockwise/index.html
+	/**
+	 *	\brief Given a set of points, this method determines both the convexity and winding order of the object.
+	 *	\returns The #PolygonType for the set of points.
+	 *	@param p The points to read.
+	 */
 	PolygonType Convexity(List<Vector2> p)
 	{
+		// http://paulbourke.net/geometry/clockwise/index.html
+
 		bool isConcave = false;
 		
 		int n = p.Count;
@@ -872,9 +1013,14 @@ public class Draw : MonoBehaviour
 		return convexity;
 	}
 
-	// http://www.gamedev.net/topic/548477-fast-2d-PolygonType-self-intersect-test/
+	/**
+	 *	\brief Given a set of 2d points, this returns true if any lines will intersect.
+	*	\returns True if points will interect, false if not.
+	 *	@param vertices The points to read.
+	 */
 	public bool SelfIntersectTest(List<Vector2> vertices)
 	{
+		// http://www.gamedev.net/topic/548477-fast-2d-PolygonType-self-intersect-test/
 		for (int i = 0; i < vertices.Count; ++i)
 		{
 			if (i < vertices.Count - 1)
@@ -924,6 +1070,12 @@ public class Draw : MonoBehaviour
 
 #region CAMERA
 	
+	/**
+	 *	\brief Sets the input camera dimensions to match the screen dimensions of a perspective at given zPosition.
+	 *	In order for input to be read correctly, an orthographic camera must be used.  If you wish to render your game using a perspective camera, this method allows you perform all rendering via perspective camera while still receiving input through a separate #inputCamera.  The #inputCamera should be set to Cull nothing, and clear Depth Only.  In addition, the orthographic camera should have the same coordinates as the rendering camera.  The easiest way to do this is simply to parent the orthographic camera to your perspective cam.
+	 *	@param perspCam The rendering camera to base dimension calculations on.
+	 *	@param zPos The Z position at which objects will be created.
+	 */
 	public void SetOrthographioCameraDimensions(Camera perspCam, float zPos)
 	{
 		Vector3 tr = perspCam.ScreenToWorldPoint(new Vector3(perspCam.pixelWidth, perspCam.pixelHeight, zPos - perspCam.transform.position.z));
