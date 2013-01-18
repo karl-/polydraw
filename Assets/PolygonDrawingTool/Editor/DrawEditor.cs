@@ -6,7 +6,7 @@ using System.Collections;
 
 [CustomEditor(typeof(Draw))]
 
-public class DrawEditor : Editor {
+class DrawEditor : Editor {
 
 	override public void OnInspectorGUI() {
 		Draw script = (Draw)target;
