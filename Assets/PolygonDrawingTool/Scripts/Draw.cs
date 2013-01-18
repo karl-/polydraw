@@ -82,6 +82,9 @@ public class Draw : MonoBehaviour
 #endregion
 
 #region ENUM
+	/** Describes polygon convexity and winding order.
+	 *
+	 */
 	enum PolygonType {
 		ConvexClockwise,
 		ConvexCounterClockwise,
@@ -89,27 +92,32 @@ public class Draw : MonoBehaviour
 		ConcaveCounterClockwise
 	}
 
-	/**
-	 *  \brief Dictates how user input is interpreted.
+	/** Dictates how user input is interpreted.
 	 *	See also #drawStyle.
 	 */
 	public enum DrawStyle {
-		Continuous,
+		Continuous,						///< Input read at samples (#samplingRate) per second, finalizing mesh on the end of an input event (OnMouseUp, or may be adapted to listen for the end of a touch phase).
 		ContinuousClosingDistance,		///< Input read at samples (#samplingRate) per second, and finalizes mesh either on input ceasing or based on a distance check.  Also see #useDistanceCheck.
-		PointMaxVertex,
-		PointClosingDistance
+		PointMaxVertex,					///< Input is read per click, finalizing when a Maximum Vertex amount is met.  See also #maxVertices.
+		PointClosingDistance			///< Input is read per click, finalizing when a point is placed within the closing distance (#closingDistance) of the initial point.
 	}
 	
+	/** \enum Anchor 
+	 *  \brief If sides are enabled, this determines where the pivot point will be placed in relation to the #zPosition.
+	 */
 	public enum Anchor {
-		Center,
-		Back,
-		Front
+		Center,							///< Sides will extend in equal distance on both Z axes.
+		Back,							///< Sides will extend from origin (#zPosition + #faceOffset) on the negative Z axis only.
+		Front 							///< Sides will extend from origin (#zPosition + #faceOffset) on the positive Z axis only.
 	}
 
+	/** \enum ColliderStyle
+	 *	\brief Determines what style collider to apply to the final object.
+	 */
 	public enum ColliderStyle {
-		BoxCollider,
-		MeshCollider,
-		None
+		BoxCollider,					///< A series of thin box colliders will be created around the edge of the final object.  This allows for concave collisions, though may be slightly more prone to "snagging" on objects.  See also #boxColliderSize (only available via scripting interface).
+		MeshCollider,					///< A standard Unity MeshCollider will be applied to this object.  See also #applyRigidbody.
+		None							///< A sphere collider will be applied to the object.  <br />Just kidding.  It does what it sounds like, no collider will be applied to the object.
 	}
 #endregion
 
@@ -221,7 +229,7 @@ public class Draw : MonoBehaviour
 				if(Input.GetMouseButtonUp(0))
 				{
 					DrawFinalMesh(userPoints);
-					DestroyTempGameObject();
+					DestroyPreviewMesh();
 					DestroyLineRenderer();
 				}
 				break;
@@ -230,7 +238,13 @@ public class Draw : MonoBehaviour
 #endregion
 
 #region PREVIEW MESH AND LINE RENDERER
-	void DrawLineRenderer(Vector3[] v)
+	/**
+	 *	\brief Draws the applied LineRenderer in world space.
+	 *	To extract world points from #userPoints, see VerticesInWorldSpace().
+	 *	@param _vertices The vertices to be fed to the LineRenderer.  Must be in world space.  See also VerticesInWorldSpace().
+	 *	@param _connectToStart If true, the LineRenderer will form a complete loop around all points, ending at the first point.  If false, the final point will not connect to the first.
+	 */
+	public void DrawLineRenderer(Vector3[] _vertices, bool _connectToStart)
 	{
 
 		if(lineRenderer == null)
@@ -243,18 +257,25 @@ public class Draw : MonoBehaviour
 
 		lineRenderer.useWorldSpace = true;
 
-		if(v.Length > 1) {
-			lineRenderer.SetVertexCount(v.Length);
+		if(_vertices.Length > 1)
+		{
+			if(_connectToStart)
+				lineRenderer.SetVertexCount(_vertices.Length+1);
+			else
+				lineRenderer.SetVertexCount(_vertices.Length);
 			
-			for(int i = 0; i < v.Length; i++) {
-			//	if(i == v.Length)		// Draws the connecting line to beginning point
-			//		gameObject.GetComponent<LineRenderer>().SetPosition(i, new Vector3(v[0].x, v[0].y, zPosition) );
-			//	else
-					lineRenderer.SetPosition(i, v[i]);
-			}
+			for(int i = 0; i < _vertices.Length; i++)
+					lineRenderer.SetPosition(i, _vertices[i]);
+
+			if(_connectToStart)
+				lineRenderer.SetPosition(_vertices.Length, _vertices[0]);
 		}
 	}
 
+	/** 
+	 *	\brief Destroys all currently drawn point markers.
+	 *	Automatically called when finalizing mesh.  See also CleanUp().
+	 */
 	public void DestroyPointMarkers()
 	{
 		for(int i = 0; i < pointMarkers.Count; i++)
@@ -264,23 +285,34 @@ public class Draw : MonoBehaviour
 		pointMarkers.Clear();
 	}
 
+	/**
+	 *	\brief Sets #lineRenderer vertex count to 0, hiding it from view.
+	 */
 	public void DestroyLineRenderer()
 	{
 		if(lineRenderer != null)
 			lineRenderer.SetVertexCount(0);		
 	}
 	
-	void AddPoint(Vector3 position)
+	/**
+	 *	\brief Adds a point to the list of vertices to be converted to a mesh.
+	 *	This method should be used in place of manually adding points to the internal point cache, as it also handles drawing of the preview mesh, #lineRenderer, and #pointMarker.
+	 *	@param _position Point in world space to add to the list of input points.  Assumed to be in world space (use ScreenToWorldPoint(screenPoint) where screenPoint is typically Input.mousePosition )
+	 */
+	public void AddPoint(Vector3 _position)
 	{
 		if(showPointMarkers)
-			pointMarkers.Add( (GameObject)GameObject.Instantiate(pointMarker, position, new Quaternion(0f,0f,0f,0f)) );
+			pointMarkers.Add( (GameObject)GameObject.Instantiate(pointMarker, _position, new Quaternion(0f,0f,0f,0f)) );
 
-		userPoints.Add(position);
+		userPoints.Add(_position);
 		
 		RefreshPreview();
 	}
 	
-	void RefreshPreview()
+	/**
+	 *	\brief Refreshes the preview mesh, point markers (#pointMarker), and line renderer (#lineRenderer).
+	 */
+	public void RefreshPreview()
 	{
 		if(showPointMarkers)
 			pointMarkers[pointMarkers.Count-1].transform.position = userPoints[userPoints.Count-1];
@@ -288,21 +320,28 @@ public class Draw : MonoBehaviour
 		if(userPoints.Count > 1)
 		{			
 			if(drawMeshInProgress)
-				DrawTempMesh(userPoints);
+				DrawPreviewMesh(userPoints);
 
 			if(drawLineRenderer)
-				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset) );		
+				DrawLineRenderer( VerticesInWorldSpace(userPoints, zPosition + faceOffset), true );		
 		}
 	}	
 	
+	/**
+	 *	\brief Clears the user point list, destroys all preview materials.  Called during mesh finalization by default.
+	 * This should be called any time that a mesh is finalized or cancelled (either due to intersecting lines, or user cancel).
+	 */
 	public void CleanUp() {
 		userPoints.Clear();
 		DestroyPointMarkers();
 		DestroyLineRenderer();
-		DestroyTempGameObject();
+		DestroyPreviewMesh();
 	}
 
-	void DestroyTempGameObject() 
+	/**
+	 *	\brief Destroy the preview mesh if there is one.
+	 */
+	public void DestroyPreviewMesh() 
 	{
 		if(previewGameObject)
 			Destroy(previewGameObject);
@@ -310,12 +349,16 @@ public class Draw : MonoBehaviour
 #endregion
 	
 #region MESH CREATION
-	/// <summary>
-	/// Draw Mesh - will use only on GameObject and re-write itself.
-	/// </summary>
+
 	GameObject previewGameObject;
-	void DrawTempMesh(List<Vector2> points) {		
-		if( points.Count < 2 ) {
+
+	/**
+	 *	\brief Draws a preview mesh with no collisions from a List<Vector2> of user points.
+	 *	This function accepts 2d points and converts them to world point vertices, triangulates, and draws a mesh.  It does not create collisions, and will be deleted on finalizing an object.  See also DestroyPreviewMesh(), CleanUp(), RefreshPreview().
+	 *	@param _points List of user points.  Assumed to be in world space (use ScreenToWorldPoint(screenPoint) where screenPoint is typically Input.mousePosition ).
+	 */
+	public void DrawPreviewMesh(List<Vector2> _points) {		
+		if( _points.Count < 2 ) {
 			CleanUp();
 			return;
 		}
@@ -328,7 +371,7 @@ public class Draw : MonoBehaviour
 			previewGameObject.AddComponent<MeshRenderer>();
 		}
 		
-		PolygonType convexity = Convexity(points);
+		PolygonType convexity = Convexity(_points);
 
 		Mesh m, c;
 		MeshWithPoints(out m, out c, convexity);
@@ -340,24 +383,23 @@ public class Draw : MonoBehaviour
 		previewGameObject.GetComponent<MeshRenderer>().sharedMaterials = mats;
 	}
 	
-	/// <summary>
-	/// Draws the final mesh, creating a new GameObject.
-	/// </summary>
-	/// <param name='points'>
-	/// A list of X,Y points in local space to be translated into vertex data.
-	/// </param>
-	void DrawFinalMesh(List<Vector2> points)
+	/**
+	 *	\brief Creates a mesh and applies all collisions and physics components.
+	 *	This method accepts user points and creates a new gameObject with a mesh composed from point data.  As opposed to DrawPreviewMesh(), this function will check against all user specified rules.  If conditions are met, CheckMaxMeshes() is called, and the new gameObject is added to the internal cache of all PolyDraw created objects.
+	 *	@param _points List of user points.  Assumed to be in world space (use ScreenToWorldPoint(screenPoint) where screenPoint is typically Input.mousePosition ).
+	 */
+	public void DrawFinalMesh(List<Vector2> _points)
 	{
-		DestroyTempGameObject();
+		DestroyPreviewMesh();
 
-		if(points.Count < 3 || ((points[0] - points[points.Count - 1]).sqrMagnitude > maxDistance && useDistanceCheck) )
+		if(_points.Count < 3 || ((_points[0] - _points[_points.Count - 1]).sqrMagnitude > maxDistance && useDistanceCheck) )
 		{
 			CleanUp();	
 			return;
 		}
 
 		// Check for self intesection 
-		if(SelfIntersectTest(points))
+		if(SelfIntersectTest(_points))
 		{
 			CleanUp();
 			return;
@@ -367,7 +409,7 @@ public class Draw : MonoBehaviour
 		CheckMaxMeshes();
 
 		// Calculate this here because the collision code needs it too
-		PolygonType convexity = Convexity(points);
+		PolygonType convexity = Convexity(_points);
 
 		// graphics = any mesh that you can see, collision = the side mesh
 		Mesh graphics, collision;
@@ -407,7 +449,7 @@ public class Draw : MonoBehaviour
 						finalMeshGameObject.GetComponent<MeshCollider>().convex = true;
 
 					if(areaRelativeMass)
-						rigidbody.mass = Mathf.Abs(Triangulator.Area(points.ToArray()) * massModifier);
+						rigidbody.mass = Mathf.Abs(Triangulator.Area(_points.ToArray()) * massModifier);
 					else
 						rigidbody.mass = mass;
 
@@ -437,7 +479,7 @@ public class Draw : MonoBehaviour
 					Rigidbody rigidbody = finalMeshGameObject.AddComponent<Rigidbody>();
 
 					if(areaRelativeMass)
-						rigidbody.mass = Triangulator.Area(points.ToArray()) * massModifier;
+						rigidbody.mass = Triangulator.Area(_points.ToArray()) * massModifier;
 					else
 						rigidbody.mass = mass;
 
@@ -470,19 +512,19 @@ public class Draw : MonoBehaviour
 						break;
 				}
 
-				for(int i = 0; i < points.Count; i++)
+				for(int i = 0; i < _points.Count; i++)
 				{
 					float x1, x2, y1, y2;
-					x1 = points[i].x;
-					y1 = points[i].y;
+					x1 = _points[i].x;
+					y1 = _points[i].y;
 
-					if(i > points.Count-2) {
-						x2 = points[0].x;
-						y2 = points[0].y;
+					if(i > _points.Count-2) {
+						x2 = _points[0].x;
+						y2 = _points[0].y;
 					}
 					else {
-						x2 = points[i+1].x;
-						y2 = points[i+1].y;			
+						x2 = _points[i+1].x;
+						y2 = _points[i+1].y;			
 					}
 
 					GameObject boxColliderObj = new GameObject();
@@ -512,12 +554,20 @@ public class Draw : MonoBehaviour
 		CleanUp();
 	}
 
-	// Assumes local space.  Returns graphics mesh in the following submesh order:
-	// 0 - Front face
-	// 1 - Sides (optional)
-	// 2 - Back face (planned)
-	void MeshWithPoints(out Mesh m, out Mesh c, PolygonType convexity)
+	/**
+	 *	\brief Triangulates userPoints and sets mesh data.
+	 *	This method should not be called directly unless you absolutely need to.  Use DrawPreviewMesh() or DrawFinalMesh() instead.
+	 *	@param m Mesh to be used for graphics.
+	 *	@param c Mesh to be used for collisions.
+	 *	@param convexity The #PolygonType.  Necessary for producing the correct face orientation.
+	 */
+	public void MeshWithPoints(out Mesh m, out Mesh c, PolygonType convexity)
 	{
+		// Assumes local space.  Returns graphics mesh in the following submesh order:
+		// 0 - Front face
+		// 1 - Sides (optional)
+		// 2 - Back face (planned)
+
 		m = new Mesh();
 		c = new Mesh();
 
@@ -616,7 +666,11 @@ public class Draw : MonoBehaviour
 
 #region MESH UTILITY
 
-	void CheckMaxMeshes() 
+	/**
+	 *	\brief Checks the count of generated objects against #maxAllowedObject.
+	 *	If the amount of generated objects is greater than the #maxAllowedObject count, the earliest drawn object is deleted.
+	 */
+	public void CheckMaxMeshes() 
 	{
 		if(generatedMeshes.Count >= maxAllowedObjects && maxAllowedObjects > 0)
 		{
@@ -626,6 +680,9 @@ public class Draw : MonoBehaviour
 		}
 	}
 	
+	/**
+	 *	\brief Destroys all PolyDraw generated gameObjects.
+	 */
 	public void DestroyAllGeneratedMeshes()
 	{
 		for(int i = 0; i < generatedMeshes.Count; i++)
@@ -637,9 +694,8 @@ public class Draw : MonoBehaviour
 #endregion
 
 #region OBJ EXPORT
-	///	<summary>
-	///	OBJ Export methods
-	///	</summary>
+
+	
 	public string ExportOBJ(string path, MeshFilter mf)
 	{
 		if(File.Exists(path)) {
