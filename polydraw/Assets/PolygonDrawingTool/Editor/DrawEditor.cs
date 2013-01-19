@@ -1,4 +1,9 @@
-
+/// Parabox LLC
+/// Support Email - karl@paraboxstudios.com
+/// paraboxstudios.com
+///	## Version 2.0
+///
+///	Provides a neatly organized user interface for Draw.cs
 
 using UnityEngine;
 using UnityEditor;

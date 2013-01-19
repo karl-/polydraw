@@ -1,10 +1,9 @@
 #pragma warning disable 0642
 
-/// <summary>
-/// Parabox LLC 
+/// Parabox LLC
 /// Support Email - karl@paraboxstudios.com
 /// paraboxstudios.com
-///	## Version 1.4
+///	## Version 2.0
 ///
 /// Draws a mesh from user input.
 /// 
@@ -12,9 +11,8 @@
 /// -	No hole support.
 ///	-	No fill rule implementation, meaning on the (rare) occasion
 ///		that a mesh doesn't get it's winding squared away it will fill
-///		improperly.
+///		improperly, or not at all.
 /// 
-/// </summary>
 
 using UnityEngine;
 using System;
@@ -60,14 +58,14 @@ public class Draw : MonoBehaviour
 	// Edges
 	public bool drawEdgePlanes = false;						///< If true, edge planes will be drawn bordering the final mesh.
 	public Material edgeMaterial;							///< The material to be applied to the edge planes of the mesh.
-	public float edgeLengthModifier = 1.2f;
-	public float edgeHeight = .5f;
-	public float minLengthToDraw = .4f;
-	public float edgeOffset = .2f;
-	public float maxAngle = 45;
-	public bool areaRelativeHeight = false;
-	public float minEdgeHeight = .1f;
-	public float maxEdgeHeight = 1f;	
+	public float edgeLengthModifier = 1.2f;					///< Multiply the edge length by this amount to determine the final length of plane.
+	public float edgeHeight = .5f;							///< How tall the plane should be.  Will be modified if #areaRelativeHeight is true.
+	public float minLengthToDraw = .4f;						///< The minimum length that a plane must be in order to be drawn.
+	public float edgeOffset = .2f;							///< A Z modifier determining how far offset this plane will be from the #zPosition.
+	public float maxAngle = 45;								///< The maximum angle steepness allowed in order for a mesh to be drawn.
+	public bool areaRelativeHeight = false;					///< If true, the #edgeHeight will be multiplied by 1/10th the area value.
+	public float minEdgeHeight = .1f;						///< The minimum edge height for a plane.  Only taken into account when #areaRelativeHeight is true.
+	public float maxEdgeHeight = 1f;						///< The maximum edge height for a plane.  Only taken into account when #areaRelativeHeight is true.	
 
 	public bool forceConvex = false;						///< If a MeshCollider is used, this can force the collision bounds to convex.
 	public bool applyRigidbody = true;						///< If true, a RigidBody will be applied to the final mesh.  Does not apply to preview mesh.
