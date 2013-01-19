@@ -25,7 +25,6 @@ class DrawEditor : Editor {
 			"PolyDrawMesh.obj",
 			"obj",
 			"Enter saved mesh name");
-		Debug.Log(path);
 		Draw.ExportOBJ(path, Selection.transforms);
 		AssetDatabase.Refresh();
 	}
