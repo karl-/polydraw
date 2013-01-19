@@ -114,6 +114,7 @@ public class Draw : MonoBehaviour
 	public enum DrawStyle {
 		Continuous,						///< Input read at samples (#samplingRate) per second, finalizing mesh on the end of an input event (OnMouseUp, or may be adapted to listen for the end of a touch phase).
 		ContinuousClosingDistance,		///< Input read at samples (#samplingRate) per second, and finalizes mesh either on input ceasing or based on a distance check.  Also see #useDistanceCheck.
+		Point,							///< Input is read per click, finalizing only when the user presses the Enter or Return key.
 		PointMaxVertex,					///< Input is read per click, finalizing when a Maximum Vertex amount is met.  See also #maxVertices.
 		PointClosingDistance			///< Input is read per click, finalizing when a point is placed within the closing distance (#closingDistance) of the initial point.
 	}
@@ -170,6 +171,11 @@ public class Draw : MonoBehaviour
 		{
 			case DrawStyle.PointMaxVertex:
 			case DrawStyle.PointClosingDistance:
+			case DrawStyle.Point:
+
+				if(Input.GetKey(KeyCode.Return))
+					DrawFinalMesh(userPoints);
+
 				if(Input.GetMouseButtonDown(0))
 				{
 					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -837,6 +843,31 @@ public class Draw : MonoBehaviour
 			}
 		}
 		ObjExporter.MeshToFile(mf, path);
+		return path;
+	}
+
+	/**
+	 *	\brief Exports all selected Transform meshes to an OBJ file in the supplied path.
+	 *	Files sharing a path name will not be ovewritten.
+ 	 *	\returns The path to the generated OBJ(s) file.
+	 *	@param path The file path to save the resulting OBJ to.
+	 *	@param t_arr An array of Transforms to be parsed.  Typical use case for this would be in editor, calling Selection.transforms.
+	 */
+	public static string ExportOBJ(string path, Transform[] t_arr)
+	{
+		foreach(Transform t in t_arr)
+		{
+			if(File.Exists(path)) {
+				int i = 0;
+				while(File.Exists(path)) {
+					path = path.Replace(".obj","");
+					path = path + i + ".obj";
+					i++;
+				}
+			}
+			if(t.GetComponent<MeshFilter>())
+				ObjExporter.MeshToFile(t.GetComponent<MeshFilter>(), path);
+		}
 		return path;
 	}
 
