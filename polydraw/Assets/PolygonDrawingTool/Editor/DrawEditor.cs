@@ -18,6 +18,18 @@ class DrawEditor : Editor {
 	bool showGameObjectSettings = false;
 	bool showCollisionSettings = false;
 
+	[MenuItem("Window/PolyDraw/Export Selected")]
+	public static void ExportSelected()
+	{
+		string path = EditorUtility.SaveFilePanelInProject("Save selected meshes as OBJ",
+			"PolyDrawMesh.obj",
+			"obj",
+			"Enter saved mesh name");
+		Debug.Log(path);
+		Draw.ExportOBJ(path, Selection.transforms);
+		AssetDatabase.Refresh();
+	}
+
 	override public void OnInspectorGUI() {
 		Draw script = (Draw)target;
 
