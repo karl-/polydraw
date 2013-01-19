@@ -1,3 +1,5 @@
+#pragma warning disable 0642
+
 /// <summary>
 /// Parabox LLC 
 /// Support Email - karl@paraboxstudios.com
@@ -45,6 +47,8 @@ public class Draw : MonoBehaviour
 	public float lineWidth = .1f;							///< If #lineRenderer is left unassigned, this is the width that will be used for an automatically generated LineRenderer.
 
 	public Material material;								///< The material to be applied to the front face of the mesh.
+	public Material sideMaterial;							///< The material to be applied to the sides of the mesh.
+
 	public int maxAllowedObjects = 4;						///< The maximum amount of meshes allowed on screen at any time.  Meshes will be deleted as new objects are drawn, in the order of oldest to newest.
 
 	// Sides
@@ -52,7 +56,18 @@ public class Draw : MonoBehaviour
 	public float sideLength = 5f;							///< How long the sides will be.
 	public Anchor anchor = Anchor.Center;					///< Where is the pivot point of this mesh?  See #Anchor for more information.
 	public float faceOffset = 0f;							///< This value is used to offset the anchor.  As an example, a faceOffset of 1f with a #zPosition of 0f would set the front face at Vector3(x, y, 1f).  With #SideAnchor Center and a faceOffset of 0, the front face is set to exactly 1/2 negative distance (towards the camera) of sideLength.   
-	public Material sideMaterial;							///< The material to be applied to the sides of the mesh.
+
+	// Edges
+	public bool drawEdgePlanes = false;						///< If true, edge planes will be drawn bordering the final mesh.
+	public Material edgeMaterial;							///< The material to be applied to the edge planes of the mesh.
+	public float edgeLengthModifier = 1.2f;
+	public float edgeHeight = .5f;
+	public float minLengthToDraw = .4f;
+	public float edgeOffset = .2f;
+	public float maxAngle = 45;
+	public bool areaRelativeHeight = false;
+	public float minEdgeHeight = .1f;
+	public float maxEdgeHeight = 1f;	
 
 	public bool forceConvex = false;						///< If a MeshCollider is used, this can force the collision bounds to convex.
 	public bool applyRigidbody = true;						///< If true, a RigidBody will be applied to the final mesh.  Does not apply to preview mesh.
@@ -413,6 +428,7 @@ public class Draw : MonoBehaviour
 
 		// Calculate this here because the collision code needs it too
 		PolygonType convexity = Convexity(_points);
+		float obj_area = Triangulator.Area(_points.ToArray());
 
 		// graphics = any mesh that you can see, collision = the side mesh
 		Mesh graphics, collision;
@@ -482,7 +498,7 @@ public class Draw : MonoBehaviour
 					Rigidbody rigidbody = finalMeshGameObject.AddComponent<Rigidbody>();
 
 					if(areaRelativeMass)
-						rigidbody.mass = Triangulator.Area(_points.ToArray()) * massModifier;
+						rigidbody.mass = obj_area * massModifier;
 					else
 						rigidbody.mass = mass;
 
@@ -555,7 +571,8 @@ public class Draw : MonoBehaviour
 
 		generatedMeshes.Add (finalMeshGameObject);
 
-		DrawEdgePlanes(_points, convexity, new Vector2(.4f, 1.2f));
+		if(drawEdgePlanes)
+			DrawEdgePlanes(_points, convexity, new Vector2(.4f, 1.2f), obj_area);
 
 		CleanUp();
 	}
@@ -632,11 +649,12 @@ public class Draw : MonoBehaviour
 		for(int i = 0; i < side_indices.Length - 6; i+=3)
 		{			
 			// 0 is for clockwise winding order, anything else is CC
-			if(i%2!=windingOrder) {
+			if(i%2!=windingOrder)
+			{
 				side_indices[i+0] = v;
 				side_indices[i+1] = v + 1;
 				side_indices[i+2] = v + 2;
-			}else{
+			} else {
 				side_indices[i+2] = v;
 				side_indices[i+1] = v + 1;
 				side_indices[i+0] = v + 2;
@@ -676,16 +694,24 @@ public class Draw : MonoBehaviour
 	public Mesh MeshPlane()
 	{
 		Mesh m = new Mesh();
+
 		m.vertices = new Vector3[4] {
-			new Vector3(-.5f, 0f, 0f),
-			new Vector3(.5f, 0f, 0f),
-			new Vector3(-.5f, -1f, 0f),
-			new Vector3(.5f, -1f, 0f)
+			new Vector3(-.5f, .1f, 0f),
+			new Vector3(.5f, .1f, 0f),
+			new Vector3(-.5f, -.9f, 0f),
+			new Vector3(.5f, -.9f, 0f)
 		};
 
 		m.triangles = new int[6] {
-			2, 1, 0,
-			1, 3, 2
+			0, 1, 3,
+			3, 2, 0
+		};
+
+		m.uv = new Vector2[] {
+			new Vector2(0f, 0f),
+			new Vector2(1f, 0f),
+			new Vector2(0f, 1f),
+			new Vector2(1f, 1f)
 		};
 
 		m.RecalculateNormals();
@@ -701,7 +727,7 @@ public class Draw : MonoBehaviour
 	 *	@param _points The points to use as a guide.
 	 *	@param _modifier Multiply plane X and Y dimensions component wise.
 	 */
-	public void DrawEdgePlanes(List<Vector2> _points, PolygonType convexity, Vector2 _modifier)
+	public void DrawEdgePlanes(List<Vector2> _points, PolygonType convexity, Vector2 _modifier, float area)
 	{
 		Vector2[] points = _points.ToArray();
 
@@ -723,26 +749,40 @@ public class Draw : MonoBehaviour
 				y2 = points[i+1].y;			
 			}
 
+			float length = Vector2.Distance(new Vector2(x1, y1), new Vector2(x2, y2));
+			length *= edgeLengthModifier;
+			
+			if(length < minLengthToDraw)
+				continue;
+		
+			float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
+
+			if( Mathf.Abs(angle) > 180-maxAngle && Mathf.Abs(angle) < 180+maxAngle)
+				;
+			else
+				continue;
+
 			GameObject boxColliderObj = new GameObject();
 			
 			boxColliderObj.AddComponent<MeshFilter>().sharedMesh = MeshPlane();
 			boxColliderObj.AddComponent<MeshRenderer>();
+			boxColliderObj.name = "EdgePlane " + angle;
 
-			boxColliderObj.name = "EdgePlane " + i;
+			boxColliderObj.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition + edgeOffset);
 
-			boxColliderObj.transform.position = new Vector3( ((x1 + x2)/2f), ((y1+y2)/2f), zPosition);
 
-			Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );
+			boxColliderObj.GetComponent<MeshRenderer>().sharedMaterial = edgeMaterial;
+			Vector2[] uvs = boxColliderObj.GetComponent<MeshFilter>().sharedMesh.uv;
+
+			float imgScale = ((float)edgeMaterial.mainTexture.width / edgeMaterial.mainTexture.height);
 			
-			float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
+			boxColliderObj.GetComponent<MeshFilter>().sharedMesh.uv = ArrayMultiply(uvs, new Vector2( length / imgScale, 1f)).ToArray();
 
-			float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
-		
-			Vector3 nrml = Vector3.Cross(new Vector3(x1, y1, 0f), new Vector3(x2, y2, 0f));
-			
-			Debug.Log( (int)angle%360 );
+			if(areaRelativeHeight)
+				boxColliderObj.transform.localScale = new Vector3(length, Mathf.Clamp(Mathf.Abs(area) * edgeHeight, minEdgeHeight, maxEdgeHeight), 2f);
+			else
+				boxColliderObj.transform.localScale = new Vector3(length, edgeHeight, 2f);
 
-			boxColliderObj.transform.localScale = new Vector3(length, 1f, 2f);
 			boxColliderObj.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
 
 			boxColliderObj.transform.parent = LastDrawnObject.transform;
