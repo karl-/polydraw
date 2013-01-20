@@ -87,7 +87,7 @@ class DrawEditor : Editor {
 		{
 			script.meshName = EditorGUILayout.TextField("Mesh Name", script.meshName);
 
-			script.material = (Material)EditorGUILayout.ObjectField("Material", script.material, typeof(Material), false);
+			script.frontMaterial = (Material)EditorGUILayout.ObjectField("Material", script.frontMaterial, typeof(Material), false);
 
 			script.anchor = (Draw.Anchor)EditorGUILayout.EnumPopup("Mesh Anchor", script.anchor);
 

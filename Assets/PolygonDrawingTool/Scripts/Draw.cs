@@ -44,8 +44,8 @@ public class Draw : MonoBehaviour
 	public LineRenderer lineRenderer;						///< The LineRenderer to use when drawing.  If left null, a default line renderer will be created.
 	public float lineWidth = .1f;							///< If #lineRenderer is left unassigned, this is the width that will be used for an automatically generated LineRenderer.
 
-	public Material material;								///< The material to be applied to the front face of the mesh.
-	public Material sideMaterial;							///< The material to be applied to the sides of the mesh.
+	public Material frontMaterial;								///< The frontMaterial to be applied to the front face of the mesh.
+	public Material sideMaterial;							///< The frontMaterial to be applied to the sides of the mesh.
 
 	public int maxAllowedObjects = 4;						///< The maximum amount of meshes allowed on screen at any time.  Meshes will be deleted as new objects are drawn, in the order of oldest to newest.
 
@@ -57,7 +57,7 @@ public class Draw : MonoBehaviour
 
 	// Edges
 	public bool drawEdgePlanes = false;						///< If true, edge planes will be drawn bordering the final mesh.
-	public Material edgeMaterial;							///< The material to be applied to the edge planes of the mesh.
+	public Material edgeMaterial;							///< The frontMaterial to be applied to the edge planes of the mesh.
 	public float edgeLengthModifier = 1.2f;					///< Multiply the edge length by this amount to determine the final length of plane.
 	public float edgeHeight = .5f;							///< How tall the plane should be.  Will be modified if #areaRelativeHeight is true.
 	public float minLengthToDraw = .4f;						///< The minimum length that a plane must be in order to be drawn.
@@ -77,7 +77,7 @@ public class Draw : MonoBehaviour
 	public bool useTag = false;								///< If true, the finalized mesh will have its tag set to #tagVal.  Note: Tag must exist prior to assignment.
 	public string tagVal = "drawnMesh";						///< The tag to applied to the final mesh.  See also #useTag.
 	public float zPosition = 0;								///< The Z position for all vertices.  Z is local to the Draw object, and thus it is recommended that the Draw object remain at world coordinates (0, 0, 0).  By default, this done for you in the Start method.
-	public Vector2 uvScale = new Vector2(1f, 1f);			///< The scale to applied when creating UV coordinates.  Different from a material scale property (though that will also affect material layout).
+	public Vector2 uvScale = new Vector2(1f, 1f);			///< The scale to applied when creating UV coordinates.  Different from a frontMaterial scale property (though that will also affect frontMaterial layout).
 	public string meshName = "Drawn Mesh";					///< What the finalized mesh will be named.
 
 	public ColliderStyle colliderStyle = ColliderStyle.BoxCollider;	///< The #ColliderStyle to be used.
@@ -94,7 +94,57 @@ public class Draw : MonoBehaviour
 
 	///< Returns the last drawn object, or null if no objects drawn.
 	public GameObject LastDrawnObject { get { return (generatedMeshes.Count > 0) ? generatedMeshes[generatedMeshes.Count-1] : null; } }
+#endregion
 
+#region MEMBER SETTINGS
+	
+	/**
+	 *	\brief Sets the front and side face materials.
+	 *	@param mat The material to apply.
+	 */
+	public void SetMaterial(Material mat)
+	{
+		frontMaterial = mat;
+		sideMaterial = mat;
+	}
+
+	/**
+	 *	\brief Sets the front face material.
+	 *	@param mat The material to apply.
+	 */
+	public void SetFrontMaterial(Material mat)
+	{
+		frontMaterial = mat;
+	}
+
+	/**
+	 *	\brief Sets the side face material.
+	 *	@param mat The material to apply.
+	 */
+	public void SetSideMaterial(Material mat)
+	{
+		sideMaterial = mat;
+	}
+
+	/**
+	 *	\brief Sets the edge plane face material.
+	 *	@param mat The material to apply.
+	 */
+	public void SetEdgeMaterial(Material mat)
+	{
+		edgeMaterial = mat;
+	}
+#endregion
+
+#region EVENTS
+	
+	public EventHandler Changed;
+
+	protected void OnCreatedNewObject() 
+	{
+		if (Changed != null)
+			Changed(this, EventArgs.Empty);
+	}
 #endregion
 
 #region ENUM
@@ -359,7 +409,7 @@ public class Draw : MonoBehaviour
 	}	
 	
 	/**
-	 *	\brief Clears the user point list, destroys all preview materials.  Called during mesh finalization by default.
+	 *	\brief Clears the user point list, destroys all preview frontMaterials.  Called during mesh finalization by default.
 	 * This should be called any time that a mesh is finalized or cancelled (either due to intersecting lines, or user cancel).
 	 */
 	public void CleanUp() {
@@ -409,8 +459,8 @@ public class Draw : MonoBehaviour
 
 		previewGameObject.GetComponent<MeshFilter>().sharedMesh = m;
 		Material[] mats = (generateSide) ? 
-			new Material[2] {material, sideMaterial} :
-			new Material[1] { material };
+			new Material[2] {frontMaterial, sideMaterial} :
+			new Material[1] { frontMaterial };
 		previewGameObject.GetComponent<MeshRenderer>().sharedMaterials = mats;
 	}
 	
@@ -441,7 +491,7 @@ public class Draw : MonoBehaviour
 
 		// Calculate this here because the collision code needs it too
 		PolygonType convexity = Convexity(_points);
-		float obj_area = Triangulator.Area(_points.ToArray());
+		float obj_area = Mathf.Abs(Triangulator.Area(_points.ToArray()));
 
 		// graphics = any mesh that you can see, collision = the side mesh
 		Mesh graphics, collision;
@@ -459,8 +509,8 @@ public class Draw : MonoBehaviour
 		finalMeshGameObject.AddComponent<MeshRenderer>();
 
 		Material[] mats = (generateSide) ? 
-			new Material[2] {material, sideMaterial} :
-			new Material[1] { material };
+			new Material[2] {frontMaterial, sideMaterial} :
+			new Material[1] { frontMaterial };
 
 		finalMeshGameObject.GetComponent<MeshRenderer>().sharedMaterials = mats;
 
@@ -481,7 +531,7 @@ public class Draw : MonoBehaviour
 						finalMeshGameObject.GetComponent<MeshCollider>().convex = true;
 
 					if(areaRelativeMass)
-						rigidbody.mass = Mathf.Abs(Triangulator.Area(_points.ToArray()) * massModifier);
+						rigidbody.mass = obj_area * massModifier;
 					else
 						rigidbody.mass = mass;
 
@@ -588,6 +638,8 @@ public class Draw : MonoBehaviour
 			DrawEdgePlanes(_points, convexity, new Vector2(.4f, 1.2f), obj_area);
 
 		CleanUp();
+
+		OnCreatedNewObject();
 	}
 
 	/**
