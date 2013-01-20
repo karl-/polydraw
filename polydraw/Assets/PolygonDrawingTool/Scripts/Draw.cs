@@ -178,7 +178,7 @@ public class Draw : MonoBehaviour
 
 				if(Input.GetMouseButtonDown(0))
 				{
-					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
+					Vector3 worldPos = inputCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zPosition + faceOffset));
 					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
 					AddPoint(worldPos);
@@ -189,7 +189,7 @@ public class Draw : MonoBehaviour
 				if(Input.mousePosition != previousMousePosition && placingPoint)
 				{			
 					previousMousePosition = Input.mousePosition;
-					Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
+					Vector3 worldPos = inputCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zPosition + faceOffset));
 					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 					
 					userPoints[userPoints.Count - 1] = worldPos;
@@ -232,7 +232,7 @@ public class Draw : MonoBehaviour
 						{			
 							previousMousePosition = Input.mousePosition;
 							
-							Vector3 worldPos = inputCamera.ScreenToWorldPoint(Input.mousePosition);
+							Vector3 worldPos = inputCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zPosition + faceOffset));
 							worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 						
 							AddPoint(worldPos);
