@@ -257,6 +257,15 @@ public class Draw : MonoBehaviour
 				break;
 		}
 	}
+
+	/**
+	 *
+	 */
+	void LateUpdate()
+	{
+		if(inputCamera != Camera.main)
+			SetOrthographioCameraDimensions(Camera.main, zPosition);
+	}
 #endregion
 
 #region PREVIEW MESH AND LINE RENDERER
@@ -1145,10 +1154,27 @@ public class Draw : MonoBehaviour
 	 *	@param perspCam The rendering camera to base dimension calculations on.
 	 *	@param zPos The Z position at which objects will be created.
 	 */
+
+	GameObject tr_g, bl_g;
 	public void SetOrthographioCameraDimensions(Camera perspCam, float zPos)
 	{
+		if(tr_g == null && bl_g == null)
+		{
+			tr_g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			bl_g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+		}
+
+		inputCamera.transform.rotation = new Quaternion(0f, 0f, 0f, 1f);
+
 		Vector3 tr = perspCam.ScreenToWorldPoint(new Vector3(perspCam.pixelWidth, perspCam.pixelHeight, zPos - perspCam.transform.position.z));
 		Vector3 bl = perspCam.ScreenToWorldPoint(new Vector3(0, 0, zPos - perspCam.transform.position.z));
+
+		Vector3 center = new Vector3( (tr.x + bl.x) / 2f, (tr.y + bl.y) / 2f, zPos);
+
+		inputCamera.transform.position = new Vector3(center.x, center.y, zPos);
+
+		tr_g.transform.position = tr;
+		bl_g.transform.position = bl;
 
 		inputCamera.orthographic = true;
 
