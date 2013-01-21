@@ -4,6 +4,90 @@
 		"selected_items":
 		[
 			[
+				"face",
+				"faceOffset"
+			],
+			[
+				"pers",
+				"perspCam"
+			],
+			[
+				"Inte",
+				"Intersecting"
+			],
+			[
+				"Inter",
+				"Intersect"
+			],
+			[
+				"Vec",
+				"Vector3"
+			],
+			[
+				"Sel",
+				"SelfIntersectTestFast"
+			],
+			[
+				"Coun",
+				"CounterClockwise"
+			],
+			[
+				"edg",
+				"edgeMaterial"
+			],
+			[
+				"sid",
+				"sideMaterial"
+			],
+			[
+				"mat",
+				"material"
+			],
+			[
+				"mate",
+				"materialLibrary"
+			],
+			[
+				"Draw",
+				"DrawEventArgs"
+			],
+			[
+				"Even",
+				"EventArgs"
+			],
+			[
+				"Event",
+				"EventHandler"
+			],
+			[
+				"Onb",
+				"OnCreatedNewObject"
+			],
+			[
+				"input",
+				"inputCamera"
+			],
+			[
+				"ro",
+				"rotationX"
+			],
+			[
+				"rot",
+				"rotationY"
+			],
+			[
+				"Clam",
+				"ClampValues"
+			],
+			[
+				"max",
+				"Maximum"
+			],
+			[
+				"loc",
+				"lock360"
+			],
+			[
 				"T",
 				"Texture2D"
 			],
@@ -14,10 +98,6 @@
 			[
 				"show",
 				"showCollisionSettings"
-			],
-			[
-				"edg",
-				"edgeHeight"
 			],
 			[
 				"area",
@@ -36,10 +116,6 @@
 				"EditorGUILayout"
 			],
 			[
-				"max",
-				"maxAngle"
-			],
-			[
 				"eg",
 				"edgeHeightModifier"
 			],
@@ -50,10 +126,6 @@
 			[
 				"Arra",
 				"ArrayMultiply"
-			],
-			[
-				"Vec",
-				"Vector2"
 			],
 			[
 				"VEc",
@@ -102,10 +174,6 @@
 			[
 				"Cal",
 				"CalcSideUVs"
-			],
-			[
-				"sid",
-				"sideLength"
 			],
 			[
 				"front",
@@ -332,10 +400,6 @@
 				"translateMode"
 			],
 			[
-				"Even",
-				"EventModifiers"
-			],
-			[
 				"subr",
 				"subtractiveMode"
 			],
@@ -428,10 +492,6 @@
 				"selected_quads"
 			],
 			[
-				"Draw",
-				"DrawGhostCube"
-			],
-			[
 				"Ray",
 				"RaycastCheck"
 			],
@@ -454,76 +514,40 @@
 			[
 				"Gu",
 				"GUI"
-			],
-			[
-				"short",
-				"KeyCodeShortcutCheck"
-			],
-			[
-				"Transl",
-				"TranslateOffset"
-			],
-			[
-				"Sel",
-				"SelectedFaces"
-			],
-			[
-				"prj",
-				"prj_name"
-			],
-			[
-				"Subl",
-				"SublimeProjectExists"
-			],
-			[
-				"GI",
-				"GUILayout"
-			],
-			[
-				"Sub",
-				"SublimeProjectExists"
-			],
-			[
-				"al",
-				"allSublimeProjects"
-			],
-			[
-				"SublimePr",
-				"SublimeProjectExistsInDirectory"
-			],
-			[
-				"Subli",
-				"SublimeProjectEditor"
-			],
-			[
-				"Sublm",
-				"Sublime-Project"
-			],
-			[
-				"Sum",
-				"Sublime-Project"
-			],
-			[
-				"Create",
-				"CreateSublimeProject"
-			],
-			[
-				"meme",
-				"memberType"
-			],
-			[
-				"clas",
-				"classArray"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "Assets/PolygonDrawingTool/Editor/Debug/Screenshot.cs",
+			"file": "Assets/PolygonDrawingTool/Scripts/Draw.cs",
 			"settings":
 			{
-				"buffer_size": 1337,
+				"buffer_size": 41233,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Assets/PolygonDrawingTool/Scripts/IntersectTesting.cs",
+			"settings":
+			{
+				"buffer_size": 1299,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Assets/PolygonDrawingTool/Editor/DrawEditor.cs",
+			"settings":
+			{
+				"buffer_size": 8478,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Assets/PolygonDrawingTool/Example/Perspective/EventListenerExample.cs",
+			"settings":
+			{
+				"buffer_size": 880,
 				"line_ending": "Unix"
 			}
 		}
@@ -556,6 +580,8 @@
 	},
 	"file_history":
 	[
+		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Editor/Debug/Screenshot.cs",
+		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/MouseLookConstrained.cs",
 		"/C/Users/karl/parabox/website/parabox_website/polydraw.html",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Orthographic/OrthoDemo.cs",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Scripts/ObjExporter.cs",
@@ -681,9 +707,7 @@
 		"/C/Users/karl/Downloads/ProBuilder Level- SciFi/Assets/pb_SceneUpdateData.txt",
 		"/C/Users/karl/probuilder/probuilder2.0/Assets/pb_SceneUpdateData 2.txt",
 		"/C/Users/karl/probuilder/probuilder2.0/Assets/pb_SceneUpdateData.txt",
-		"/C/Users/karl/Downloads/ProBuilder Level- SciFi/ProBuilder Level- SciFi/Assets/pb_SceneUpdateData.txt",
-		"/C/Users/karl/probuilder/probuilder2.0/Assets/pb_SceneUpdateData 3.txt",
-		"/C/Users/karl/Documents/upgradetest/Assets/UpdateBetaObjs.cs"
+		"/C/Users/karl/Downloads/ProBuilder Level- SciFi/ProBuilder Level- SciFi/Assets/pb_SceneUpdateData.txt"
 	],
 	"find":
 	{
@@ -703,9 +727,17 @@
 	},
 	"find_state":
 	{
-		"case_sensitive": false,
+		"case_sensitive": true,
 		"find_history":
 		[
+			"userPoints",
+			"SelfIntersectTest",
+			"script.material",
+			"material",
+			"ScreenToWorldPoint(Input.mousePosition)",
+			"lock360",
+			"Lock360",
+			"			\n",
 			"GameView",
 			"vectorLength",
 			"2f",
@@ -825,15 +857,7 @@
 			"memberType",
 			"offset",
 			"vertex",
-			"BuildOffsetArray",
-			"camViewAbs",
-			"gameObject",
-			"ToggleTriggerVisibility",
-			"ToggleEntityVisibility",
-			"ToggleOccluderVisibility",
-			"ToggleTriggerVisibility",
-			"		foreach(pb_Entity sel in Object.FindObjectsOfType(typeof(pb_Entity)))\n		{\n			if(sel.entityType == ProBuilder.EntityType.Trigger) {\n				sel.GetComponent<MeshRenderer>().enabled = show;\n				sel.GetComponent<MeshCollider>().enabled = show;\n			}\n		}",
-			"GetProBuilderPack"
+			"BuildOffsetArray"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -841,6 +865,9 @@
 		"regex": false,
 		"replace_history":
 		[
+			"script.frontMaterial",
+			"frontMaterial",
+			"ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zPosition + faceOffset))",
 			"points",
 			"_points",
 			"DrawPreviewMesh",
@@ -897,18 +924,18 @@
 			[
 				{
 					"buffer": 0,
-					"file": "Assets/PolygonDrawingTool/Editor/Debug/Screenshot.cs",
+					"file": "Assets/PolygonDrawingTool/Scripts/Draw.cs",
 					"settings":
 					{
-						"buffer_size": 1337,
+						"buffer_size": 41233,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								334,
-								334
+								11489,
+								11489
 							]
 						],
 						"settings":
@@ -917,7 +944,87 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 60.0,
+						"translation.y": 2480.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "Assets/PolygonDrawingTool/Scripts/IntersectTesting.cs",
+					"settings":
+					{
+						"buffer_size": 1299,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								890,
+								890
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Unity3D/UnityC#.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "Assets/PolygonDrawingTool/Editor/DrawEditor.cs",
+					"settings":
+					{
+						"buffer_size": 8478,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3620,
+								3620
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Unity3D/UnityC#.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1358.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "Assets/PolygonDrawingTool/Example/Perspective/EventListenerExample.cs",
+					"settings":
+					{
+						"buffer_size": 880,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								677,
+								677
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Unity3D/UnityC#.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
