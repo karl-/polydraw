@@ -189,8 +189,9 @@ public class Draw : MonoBehaviour
 #endregion
 
 #region INITIALIZATION
-	void Start() {
-
+	
+	void Start()
+	{		
 		transform.parent = null;
 		transform.position = Vector3.zero;
 
@@ -207,6 +208,9 @@ public class Draw : MonoBehaviour
 #region UPDATE
 	void Update()
 	{
+		if(inputCamera != Camera.main)
+			SetOrthographioCameraDimensions(Camera.main, zPosition + faceOffset);
+		
 		// If mouse is in an ignoreRect, don't affect  mesh drawing.
 		if(ignoreRect.Count > 0)
 		{
@@ -229,7 +233,7 @@ public class Draw : MonoBehaviour
 				if(Input.GetMouseButtonDown(0))
 				{
 					Vector3 worldPos = inputCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zPosition + faceOffset));
-					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
+					// worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
 					AddPoint(worldPos);
 					
@@ -240,7 +244,7 @@ public class Draw : MonoBehaviour
 				{			
 					previousMousePosition = Input.mousePosition;
 					Vector3 worldPos = inputCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zPosition + faceOffset));
-					worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
+					// worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 					
 					userPoints[userPoints.Count - 1] = worldPos;
 
@@ -283,8 +287,7 @@ public class Draw : MonoBehaviour
 							previousMousePosition = Input.mousePosition;
 							
 							Vector3 worldPos = inputCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zPosition + faceOffset));
-							worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
-						
+												
 							AddPoint(worldPos);
 							
 							if(drawStyle == DrawStyle.ContinuousClosingDistance && userPoints.Count > 2)
@@ -313,8 +316,7 @@ public class Draw : MonoBehaviour
 	 */
 	void LateUpdate()
 	{
-		if(inputCamera != Camera.main)
-			SetOrthographioCameraDimensions(Camera.main, zPosition);
+
 	}
 #endregion
 
@@ -1087,7 +1089,7 @@ public class Draw : MonoBehaviour
 
 		return shifted;
 	}
-	
+
 	/**
 	 *	\brief Given a set of points, this method determines both the convexity and winding order of the object.
 	 *	\returns The #PolygonType for the set of points.
@@ -1206,32 +1208,28 @@ public class Draw : MonoBehaviour
 	 *	@param perspCam The rendering camera to base dimension calculations on.
 	 *	@param zPos The Z position at which objects will be created.
 	 */
-
-	GameObject tr_g, bl_g;
 	public void SetOrthographioCameraDimensions(Camera perspCam, float zPos)
 	{
-		if(tr_g == null && bl_g == null)
-		{
-			tr_g = GameObject.CreatePrimitive(PrimitiveType.Cube);
-			bl_g = GameObject.CreatePrimitive(PrimitiveType.Cube);
-		}
-
-		inputCamera.transform.rotation = new Quaternion(0f, 0f, 0f, 1f);
-
 		Vector3 tr = perspCam.ScreenToWorldPoint(new Vector3(perspCam.pixelWidth, perspCam.pixelHeight, zPos - perspCam.transform.position.z));
 		Vector3 bl = perspCam.ScreenToWorldPoint(new Vector3(0, 0, zPos - perspCam.transform.position.z));
 
 		Vector3 center = new Vector3( (tr.x + bl.x) / 2f, (tr.y + bl.y) / 2f, zPos);
 
-		inputCamera.transform.position = new Vector3(center.x, center.y, zPos);
-
-		tr_g.transform.position = tr;
-		bl_g.transform.position = bl;
+		inputCamera.transform.position = new Vector3(center.x, center.y, perspCam.transform.position.z);
 
 		inputCamera.orthographic = true;
+		inputCamera.transform.rotation = new Quaternion(0f, 0f, 0f, 1f);
 
 		// orthographicSize is Y
 		inputCamera.orthographicSize = (tr.y - bl.y) / 2f;
 	}
 #endregion
+}
+
+public static class VectorExtensions
+{
+	public static Vector3 ToVector3(this Vector2 v2)
+	{
+		return new Vector3(v2.x, v2.y, 0f);
+	}
 }

@@ -48,6 +48,7 @@
      <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\EventListenerExample.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\MouseLookConstrained.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Scripts\Draw.cs" />
+     <Compile Include="Assets\PolygonDrawingTool\Scripts\IntersectTesting.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Scripts\ObjExporter.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Scripts\Triangulator.cs" />
      <None Include="Assets\PolygonDrawingTool\Example\Art Credits.txt" />
