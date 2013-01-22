@@ -18,6 +18,12 @@ class DrawEditor : Editor {
 	bool showGameObjectSettings = false;
 	bool showCollisionSettings = false;
 
+	[MenuItem("Window/PolyDraw/Open Documentation")]
+	public static void OpenURL()
+	{
+	    Application.OpenURL ("http://www.paraboxstudios.com/polydraw/docs/index.html");
+	}
+
 	[MenuItem("Window/PolyDraw/Export Selected")]
 	public static void ExportSelected()
 	{

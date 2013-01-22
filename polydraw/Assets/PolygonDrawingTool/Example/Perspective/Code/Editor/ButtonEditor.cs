@@ -8,8 +8,8 @@ public class ButtonEditor : Editor
 {
 	Button b;
 
-	[MenuItem("Window/Refersh Buttons")]
-	public static void tadlkfsd()
+	// [MenuItem("Window/Refersh Buttons")]
+	public static void RefreshButtons()
 	{
 		foreach(Button butt in TransformExtensions.GetComponents<Button>(Selection.transforms))
 		{
