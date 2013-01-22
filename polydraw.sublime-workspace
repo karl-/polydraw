@@ -544,10 +544,35 @@
 			}
 		},
 		{
+			"file": "Assets/PolygonDrawingTool/Editor/DrawEditor.cs",
+			"settings":
+			{
+				"buffer_size": 8650,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "<strong>PolyDraw</strong> - <em>Draw 2D mesh polygons in real time!</em>\n<br><br>\nVisit <a href=\"http://www.paraboxstudios.com/polydraw.html\">the PolyDraw website</a> for Windows, Mac, and Web demo (Save mesh feature not available on Web demo).\n<br><br>\n<a href=\"http://www.paraboxstudios.com/demo/polydraw3-demo.html\">WEB DEMO HERE</a>\n<br><br>\n<STRONG>Features</STRONG>\n<br>\n- 5 Different preset drawing methods\n<br>\n- Draw interactive meshes as a gameplay mechanic\n<br>\n- Apply area proportional mass\n<br>\n- Generate colliders with total control (Concave collisions supported)\n<br>\n- Clean C#, designed to be customized to fit your specific needs\n<br>\n- iOS / Android compatible\n<br>\n- Export drawn meshes in editor or standalone!",
+			"settings":
+			{
+				"buffer_size": 733,
+				"line_ending": "Windows",
+				"name": "<strong>PolyDraw</strong> - <em>Draw 2D mesh polyg"
+			}
+		},
+		{
 			"file": "/C/Users/karl/parabox/website/polydraw.html",
 			"settings":
 			{
-				"buffer_size": 3473,
+				"buffer_size": 3479,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/C/Users/karl/parabox/website/index.html",
+			"settings":
+			{
+				"buffer_size": 2977,
 				"line_ending": "Windows"
 			}
 		},
@@ -936,7 +961,7 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 6,
 			"sheets":
 			[
 				{
@@ -1022,18 +1047,71 @@
 				},
 				{
 					"buffer": 3,
-					"file": "/C/Users/karl/parabox/website/polydraw.html",
+					"file": "Assets/PolygonDrawingTool/Editor/DrawEditor.cs",
 					"settings":
 					{
-						"buffer_size": 3473,
+						"buffer_size": 8650,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1813,
-								1813
+								594,
+								594
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Unity3D/UnityC#.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"settings":
+					{
+						"buffer_size": 733,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								733
+							]
+						],
+						"settings":
+						{
+							"auto_name": "<strong>PolyDraw</strong> - <em>Draw 2D mesh polyg",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "/C/Users/karl/parabox/website/polydraw.html",
+					"settings":
+					{
+						"buffer_size": 3479,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1263,
+								1263
 							]
 						],
 						"settings":
@@ -1042,13 +1120,40 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 300.0,
+						"translation.y": 240.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 4,
+					"buffer": 6,
+					"file": "/C/Users/karl/parabox/website/index.html",
+					"settings":
+					{
+						"buffer_size": 2977,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1112,
+								1112
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 60.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
 					"file": "Assets/PolygonDrawingTool/Scripts/Draw.cs",
 					"settings":
 					{
@@ -1075,7 +1180,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 8,
 					"file": "Assets/PolygonDrawingTool/Example/Perspective/Code/Editor/ButtonEditor.cs",
 					"settings":
 					{
