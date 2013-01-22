@@ -45,8 +45,6 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Doxygen\Editor\DoxygenWindow.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Editor\Debug\Screenshot.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Editor\Debug\SublimeProjectEditor.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Editor\DrawEditor.cs" />
      <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\Code\Editor\ButtonEditor.cs" />
      <None Include="Assets\PolygonDrawingTool\Example\Art Credits.txt" />

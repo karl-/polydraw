@@ -539,8 +539,16 @@
 			"file": "Assets/PolygonDrawingTool/Readme.txt",
 			"settings":
 			{
-				"buffer_size": 99,
+				"buffer_size": 180,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/C/Users/karl/parabox/website/polydraw.html",
+			"settings":
+			{
+				"buffer_size": 3473,
+				"line_ending": "Windows"
 			}
 		},
 		{
@@ -552,21 +560,10 @@
 			}
 		},
 		{
-			"contents": "",
-			"file": "Assets/PolygonDrawingTool/Example/Perspective/Interface Code/Menu.cs",
-			"file_size": -1,
-			"file_write_time": -1,
+			"file": "Assets/PolygonDrawingTool/Example/Perspective/Code/Editor/ButtonEditor.cs",
 			"settings":
 			{
-				"buffer_size": 0,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "Assets/PolygonDrawingTool/Example/Art Credits.txt",
-			"settings":
-			{
-				"buffer_size": 193,
+				"buffer_size": 2367,
 				"line_ending": "Unix"
 			}
 		}
@@ -599,6 +596,9 @@
 	},
 	"file_history":
 	[
+		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/Interface Code/Menu.cs",
+		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Art Credits.txt",
+		"/C/Users/karl/parabox/website/polydraw/index.html",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Readme 1.txt",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/Code/GameManager.cs",
 		"/C/Users/karl/parabox/polydraw/bin/WebPlayer/WebPlayer.html",
@@ -611,7 +611,6 @@
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/Editor/ButtonEditor.cs",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/GameManager.cs",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/EventListenerExample.cs",
-		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/Interface Code/Menu.cs",
 		"/C/Users/karl/probuilder-game/Assets/iTween/Plugins/iTween.cs",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/Interface Code/Button.cs",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Perspective/Interface Code/ButtonEditor.cs",
@@ -624,7 +623,6 @@
 		"/C/Users/karl/parabox/website/parabox_website/polydraw.html",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Scripts/ObjExporter.cs",
 		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Scripts/Triangulator.cs",
-		"/C/Users/karl/parabox/polydraw/Assets/PolygonDrawingTool/Example/Art Credits.txt",
 		"/C/Users/karl/probuilder/probuilder2.0/Assets/6by7/ProBuilder/Classes/pbUtil.cs",
 		"/C/Users/karl/parabox/polydraw/docs/Doxyfile",
 		"/C/Users/karl/AppData/Roaming/Sublime Text 2/Packages/User/Preferences.sublime-settings",
@@ -725,8 +723,7 @@
 		"/C/Users/karl/Documents/New Unity Project 4/Assets/README/Editor/UpdateBetaObjs.cs",
 		"/C/Users/karl/Documents/New Unity Project 3/Assets/README/Editor/UpdateBetaObjs.cs",
 		"/C/Users/karl/Documents/New Unity Project 3/Assets/pb_SceneUpdateData.txt",
-		"/C/Users/karl/probuilder/staging/Assets/6by7/ProBuilder/API Examples/Runtime Editing/RuntimeEdit.cs",
-		"/C/Users/karl/Documents/New Unity Project 3/Assets/README/README.txt"
+		"/C/Users/karl/probuilder/staging/Assets/6by7/ProBuilder/API Examples/Runtime Editing/RuntimeEdit.cs"
 	],
 	"find":
 	{
@@ -1001,15 +998,15 @@
 					"file": "Assets/PolygonDrawingTool/Readme.txt",
 					"settings":
 					{
-						"buffer_size": 99,
+						"buffer_size": 180,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								99,
-								99
+								180,
+								180
 							]
 						],
 						"settings":
@@ -1025,6 +1022,33 @@
 				},
 				{
 					"buffer": 3,
+					"file": "/C/Users/karl/parabox/website/polydraw.html",
+					"settings":
+					{
+						"buffer_size": 3473,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1813,
+								1813
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 300.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
 					"file": "Assets/PolygonDrawingTool/Scripts/Draw.cs",
 					"settings":
 					{
@@ -1045,57 +1069,31 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1380.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "Assets/PolygonDrawingTool/Example/Perspective/Interface Code/Menu.cs",
-					"settings":
-					{
-						"buffer_size": 0,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Unity3D/UnityC#.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 560.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 5,
-					"file": "Assets/PolygonDrawingTool/Example/Art Credits.txt",
+					"file": "Assets/PolygonDrawingTool/Example/Perspective/Code/Editor/ButtonEditor.cs",
 					"settings":
 					{
-						"buffer_size": 193,
+						"buffer_size": 2367,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								121,
-								121
+								254,
+								254
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"syntax": "Packages/Unity3D/UnityC#.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
