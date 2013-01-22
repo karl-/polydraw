@@ -1,5 +1,14 @@
 fileFormatVersion: 2
 guid: 837c1a3acebda4ffe9a397268c340cf2
+labels:
+- 3d
+- draw
+- drawing
+- mesh
+- polygon
+- runtime
+- obj
+- export
 MonoImporter:
   serializedVersion: 2
   defaultReferences: []

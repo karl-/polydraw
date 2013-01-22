@@ -1,5 +1,8 @@
 fileFormatVersion: 2
 guid: 1bd36fc64d99d4faab3dbd21afa7ca3a
+labels:
+- drawing
+- editor
 MonoImporter:
   serializedVersion: 2
   defaultReferences: []
