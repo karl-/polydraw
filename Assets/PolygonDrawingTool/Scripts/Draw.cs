@@ -206,6 +206,7 @@ public class Draw : MonoBehaviour
 #endregion
 
 #region UPDATE
+
 	void Update()
 	{
 		if(inputCamera != Camera.main)
@@ -236,7 +237,6 @@ public class Draw : MonoBehaviour
 					// worldPos = new Vector3(worldPos.x, worldPos.y, zPosition);
 
 					AddPoint(worldPos);
-					
 					placingPoint = true;
 				}
 				
@@ -309,14 +309,6 @@ public class Draw : MonoBehaviour
 				}
 				break;
 		}
-	}
-
-	/**
-	 *
-	 */
-	void LateUpdate()
-	{
-
 	}
 #endregion
 
@@ -873,6 +865,17 @@ public class Draw : MonoBehaviour
 		}
 	}
 	
+	/**
+	 *	\brief Returns the area of the currently drawn polygon.
+	 */
+	public float GetArea()
+	{
+		if(userPoints != null && userPoints.Count > 2)
+			return Mathf.Abs(Triangulator.Area(userPoints.ToArray()));
+		else
+			return 0f;
+	}
+
 	/**
 	 *	\brief Destroys all PolyDraw generated gameObjects.
 	 */
