@@ -3,6 +3,7 @@
 using UnityEditor;
 using UnityEngine;
 using System;
+using Polydraw;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -13,8 +14,6 @@ using System.Collections.Generic;
 //		with editing.
 //	- normalize and scale uv options
 
-namespace Polydraw
-{
 [CustomEditor(typeof(PolydrawObject))]
 public class DrawEditor : Editor
 {
@@ -88,10 +87,10 @@ public class DrawEditor : Editor
 		PolydrawObject polydrawObject = PolydrawObject.CreateInstance();
 
 		polydrawObject.drawSettings.frontMaterial = (Material)Resources.LoadAssetAtPath(
-			"Assets/Polydraw/Images/Materials/Cardboard.mat", typeof(Material));
+			"Assets/Polydraw/Default Textues/Cardboard.mat", typeof(Material));
 		
 		polydrawObject.drawSettings.sideMaterial = (Material)Resources.LoadAssetAtPath(
-			"Assets/Polydraw/Images/Materials/Cardboard Grass.mat", typeof(Material));
+			"Assets/Polydraw/Default Textures/Cardboard Grass.mat", typeof(Material));
 		
 		Selection.activeTransform = polydrawObject.transform;
 	}
@@ -405,5 +404,4 @@ public class DrawEditor : Editor
 		return cam.ScreenToWorldPoint(pos);
 	}
 #endregion
-}
 }
