@@ -18,7 +18,7 @@
 	<DebugType>full</DebugType>
 	<Optimize>false</Optimize>
 	<OutputPath>Temp\bin\Debug\</OutputPath>
-	<DefineConstants>DEBUG;TRACE;UNITY_3_5_6;UNITY_3_5;UNITY_EDITOR;ENABLE_PROFILER;UNITY_STANDALONE_OSX;ENABLE_GENERICS;ENABLE_DUCK_TYPING;ENABLE_TERRAIN;ENABLE_MOVIES;ENABLE_WEBCAM;ENABLE_MICROPHONE;ENABLE_NETWORK;ENABLE_CLOTH;ENABLE_WWW;ENABLE_SUBSTANCE</DefineConstants>
+	<DefineConstants>DEBUG;TRACE;UNITY_3_5_6;UNITY_3_5;UNITY_EDITOR;ENABLE_PROFILER;UNITY_STANDALONE_WIN;ENABLE_GENERICS;ENABLE_DUCK_TYPING;ENABLE_TERRAIN;ENABLE_MOVIES;ENABLE_WEBCAM;ENABLE_MICROPHONE;ENABLE_NETWORK;ENABLE_CLOTH;ENABLE_WWW;ENABLE_SUBSTANCE</DefineConstants>
 	<ErrorReport>prompt</ErrorReport>
 	<WarningLevel>4</WarningLevel>
 	<NoWarn>0169</NoWarn>
@@ -37,23 +37,22 @@
     <Reference Include="System.XML" />
 	<Reference Include="System.Core" />
 	<Reference Include="UnityEngine">
-	  <HintPath>/Applications/Unity 3.5.6/Unity.app/Contents/Frameworks/Managed/UnityEngine.dll</HintPath>
+	  <HintPath>C:/Program Files/Unity 3.5.6/Editor/Data/Managed/UnityEngine.dll</HintPath>
 	</Reference>
 	<Reference Include="UnityEditor">
-	  <HintPath>/Applications/Unity 3.5.6/Unity.app/Contents/Frameworks/Managed/UnityEditor.dll</HintPath>
+	  <HintPath>C:/Program Files/Unity 3.5.6/Editor/Data/Managed/UnityEditor.dll</HintPath>
 	</Reference>
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Doxygen\Editor\DoxygenWindow.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Editor\Debug\Screenshot.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Editor\Debug\SublimeProjectEditor.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Editor\DrawEditor.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\Code\Editor\ButtonEditor.cs" />
-     <None Include="Assets\PolygonDrawingTool\Example\Art Credits.txt" />
+     <Compile Include="Assets\Polydraw\Editor\DrawEditor.cs" />
+     <Compile Include="Assets\Polydraw\Editor\DrawInspectorEditor.cs" />
+     <Compile Include="Assets\Polydraw\Example\Perspective\Code\Editor\ButtonEditor.cs" />
+     <None Include="Assets\Polydraw\Example\Art Credits.txt" />
      <None Include="Assets\Doxygen\Editor\Resources\BaseDoxyfile.txt" />
      <None Include="Assets\Doxygen\ReadMe.txt" />
-     <None Include="Assets\PolygonDrawingTool\Readme.txt" />
- <Reference Include="Assets\AssetStoreTools\Editor\AssetStoreTools">
+     <None Include="Assets\Polydraw\Readme.txt" />
+ <Reference Include="AssetStoreTools">
  <HintPath>Assets\AssetStoreTools\Editor\AssetStoreTools.dll</HintPath>
  </Reference>
   </ItemGroup>

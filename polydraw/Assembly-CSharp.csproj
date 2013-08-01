@@ -18,7 +18,7 @@
 	<DebugType>full</DebugType>
 	<Optimize>false</Optimize>
 	<OutputPath>Temp\bin\Debug\</OutputPath>
-	<DefineConstants>DEBUG;TRACE;UNITY_3_5_6;UNITY_3_5;UNITY_EDITOR;ENABLE_PROFILER;UNITY_STANDALONE_OSX;ENABLE_GENERICS;ENABLE_DUCK_TYPING;ENABLE_TERRAIN;ENABLE_MOVIES;ENABLE_WEBCAM;ENABLE_MICROPHONE;ENABLE_NETWORK;ENABLE_CLOTH;ENABLE_WWW;ENABLE_SUBSTANCE</DefineConstants>
+	<DefineConstants>DEBUG;TRACE;UNITY_3_5_6;UNITY_3_5;UNITY_EDITOR;ENABLE_PROFILER;UNITY_STANDALONE_WIN;ENABLE_GENERICS;ENABLE_DUCK_TYPING;ENABLE_TERRAIN;ENABLE_MOVIES;ENABLE_WEBCAM;ENABLE_MICROPHONE;ENABLE_NETWORK;ENABLE_CLOTH;ENABLE_WWW;ENABLE_SUBSTANCE</DefineConstants>
 	<ErrorReport>prompt</ErrorReport>
 	<WarningLevel>4</WarningLevel>
 	<NoWarn>0169</NoWarn>
@@ -37,26 +37,31 @@
     <Reference Include="System.XML" />
 	<Reference Include="System.Core" />
 	<Reference Include="UnityEngine">
-	  <HintPath>/Applications/Unity 3.5.6/Unity.app/Contents/Frameworks/Managed/UnityEngine.dll</HintPath>
+	  <HintPath>C:/Program Files/Unity 3.5.6/Editor/Data/Managed/UnityEngine.dll</HintPath>
 	</Reference>
 	<Reference Include="UnityEditor">
-	  <HintPath>/Applications/Unity 3.5.6/Unity.app/Contents/Frameworks/Managed/UnityEditor.dll</HintPath>
+	  <HintPath>C:/Program Files/Unity 3.5.6/Editor/Data/Managed/UnityEditor.dll</HintPath>
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\PolygonDrawingTool\Example\Orthographic\OrthoDemo.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\Code\Button.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\Code\EventListenerExample.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\Code\GameManager.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\Code\Menu.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Example\Perspective\Code\MouseLookConstrained.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Scripts\Draw.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Scripts\ObjExporter.cs" />
-     <Compile Include="Assets\PolygonDrawingTool\Scripts\Triangulator.cs" />
-     <None Include="Assets\PolygonDrawingTool\Example\Art Credits.txt" />
+     <Compile Include="Assets\AssetStoreTools\Screenshot.cs" />
+     <Compile Include="Assets\Polydraw\Example\Orthographic\OrthoDemo.cs" />
+     <Compile Include="Assets\Polydraw\Example\Perspective\Code\Button.cs" />
+     <Compile Include="Assets\Polydraw\Example\Perspective\Code\EventListenerExample.cs" />
+     <Compile Include="Assets\Polydraw\Example\Perspective\Code\GameManager.cs" />
+     <Compile Include="Assets\Polydraw\Example\Perspective\Code\Menu.cs" />
+     <Compile Include="Assets\Polydraw\Example\Perspective\Code\MouseLookConstrained.cs" />
+     <Compile Include="Assets\Polydraw\Scripts\Draw.cs" />
+     <Compile Include="Assets\Polydraw\Scripts\DrawSettings.cs" />
+     <Compile Include="Assets\Polydraw\Scripts\DrawUtility.cs" />
+     <Compile Include="Assets\Polydraw\Scripts\ObjExporter.cs" />
+     <Compile Include="Assets\Polydraw\Scripts\PolydrawExtensions.cs" />
+     <Compile Include="Assets\Polydraw\Scripts\PolydrawObject.cs" />
+     <Compile Include="Assets\Polydraw\Scripts\Triangulator.cs" />
+     <None Include="Assets\Polydraw\Example\Art Credits.txt" />
      <None Include="Assets\Doxygen\Editor\Resources\BaseDoxyfile.txt" />
      <None Include="Assets\Doxygen\ReadMe.txt" />
-     <None Include="Assets\PolygonDrawingTool\Readme.txt" />
+     <None Include="Assets\Polydraw\Readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
