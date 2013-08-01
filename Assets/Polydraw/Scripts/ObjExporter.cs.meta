@@ -1,5 +1,10 @@
 fileFormatVersion: 2
 guid: 5c3f6d784610e6a4da9a65304d0e12a6
+labels:
+- mesh
+- procedural
+- obj
+- export
 MonoImporter:
   serializedVersion: 2
   defaultReferences: []
