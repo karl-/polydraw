@@ -1,5 +1,15 @@
 fileFormatVersion: 2
 guid: b21f69a0f51df1d42ad5df391a14512e
+labels:
+- 3d
+- editor
+- mesh
+- polydraw
+- polygon
+- runtime
+- tool
+- model
+- generatin
 MonoImporter:
   serializedVersion: 2
   defaultReferences: []

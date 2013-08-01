@@ -1,5 +1,16 @@
 fileFormatVersion: 2
 guid: b262e63a28723534bac46e27be419ed4
+labels:
+- 3d
+- drawing
+- polygon
+- geometry
+- mesh
+- generation
+- runtime
+- realtime
+- polydraw
+- draw
 MonoImporter:
   serializedVersion: 2
   defaultReferences: []
