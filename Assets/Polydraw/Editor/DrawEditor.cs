@@ -87,7 +87,7 @@ public class DrawEditor : Editor
 		PolydrawObject polydrawObject = PolydrawObject.CreateInstance();
 
 		polydrawObject.drawSettings.frontMaterial = (Material)Resources.LoadAssetAtPath(
-			"Assets/Polydraw/Default Textues/Cardboard.mat", typeof(Material));
+			"Assets/Polydraw/Default Textures/Cardboard.mat", typeof(Material));
 		
 		polydrawObject.drawSettings.sideMaterial = (Material)Resources.LoadAssetAtPath(
 			"Assets/Polydraw/Default Textures/Cardboard Grass.mat", typeof(Material));
