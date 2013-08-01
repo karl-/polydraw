@@ -757,8 +757,10 @@ public class Draw : MonoBehaviour
 			boxColliderObj.GetComponent<MeshRenderer>().sharedMaterial = drawSettings.edgeMaterial;
 			Vector2[] uvs = boxColliderObj.GetComponent<MeshFilter>().sharedMesh.uv;
 
-			float imgScale = ((float)drawSettings.edgeMaterial.mainTexture.width / drawSettings.edgeMaterial.mainTexture.height);
-			
+			float imgScale = 1f;
+			if(drawSettings.edgeMaterial != null)
+				imgScale = ((float)drawSettings.edgeMaterial.mainTexture.width / drawSettings.edgeMaterial.mainTexture.height);
+
 			boxColliderObj.GetComponent<MeshFilter>().sharedMesh.uv = DrawUtility.ArrayMultiply(uvs, new Vector2( length / imgScale, 1f)).ToArray();
 
 			if(drawSettings.areaRelativeHeight)
