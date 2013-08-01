@@ -16,7 +16,7 @@ public class ObjExporter {
  
     public static string MeshToString(MeshFilter mf) {
         
-        Mesh m = mf.mesh;
+        Mesh m = mf.sharedMesh;
         Material[] mats = mf.renderer.sharedMaterials;
  
         StringBuilder sb = new StringBuilder();
