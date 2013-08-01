@@ -510,6 +510,10 @@ public class Draw : MonoBehaviour
 		Mesh graphics, collision;
 		Draw.PolygonType convexity;
 
+		// Since Draw doesn't expose special collision settings, just the side settings.
+		drawSettings.colAnchor = drawSettings.anchor;
+		drawSettings.colDepth = drawSettings.sideLength > .01 ? drawSettings.sideLength : .01f;
+
 		if( !DrawUtility.MeshWithPoints(_points, drawSettings, out graphics, out collision, out convexity) )
 		{
 			if(graphics != null)
