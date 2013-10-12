@@ -92,7 +92,20 @@ public static class DrawUtility
 		// Create the Vector3 vertices
 		List<Vector3> front_vertices = VerticesWithPoints(points, zOrigin - halfSideLength);
 
-		List<Vector2> front_uv = points.Multiply(drawSettings.uvScale);
+		Vector2 avg = Vector3.zero;
+		for(int i = 0; i < points.Count; i++)
+			avg += points[i];
+		avg /= (float)points.Count;
+		avg += drawSettings.uvOffset;
+
+		List<Vector2> front_uv = new List<Vector2>(points.ToArray());
+
+		for(int i = 0; i < points.Count; i++)
+		{
+			front_uv[i] += drawSettings.uvOffset;
+			front_uv[i] = front_uv[i].RotateAroundPoint(avg, drawSettings.uvRotation);
+			front_uv[i] = Vector2.Scale(front_uv[i], drawSettings.uvScale);
+		}
 
 		/*** Finish Front Face ***/
 		
@@ -210,6 +223,30 @@ public static class DrawUtility
 			uvs.Add( Vector2.Scale(l[i], v) );
 		}
 		return uvs;
+	}
+
+	public static Vector2 RotateAroundPoint(this Vector2 v, Vector2 origin, float theta)
+	{
+		// discard y val
+		float cx = origin.x, cy = origin.y;	// origin
+		float px = v.x, py = v.y;			// point
+
+		float s = Mathf.Sin( Mathf.Deg2Rad*theta );
+		float c = Mathf.Cos( Mathf.Deg2Rad*theta );
+
+		// translate point back to origin:
+		px -= cx;
+		py -= cy;
+
+		// rotate point
+		float xnew = px * c + py * s;
+		float ynew = -px * s + py * c;
+
+		// translate point back:
+		px = xnew + cx;
+		py = ynew + cy;
+		
+		return new Vector2(px, py);
 	}
 #endregion
 

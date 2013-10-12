@@ -8,6 +8,16 @@ namespace Polydraw {
 
 public class PolydrawObject : MonoBehaviour
 {
+#region Classes
+
+	public struct UVSettings
+	{
+		public Vector2 offset;
+		public Vector2 scale;
+		public float rotation;
+	}
+#endregion
+
 #region Members
 
 	public List<Vector2> points = new List<Vector2>();

@@ -201,6 +201,12 @@ public class DrawEditor : Editor
 		GUI.enabled = poly.drawSettings.generateSide;
 		poly.drawSettings.sideMaterial = (Material)EditorGUILayout.ObjectField("Side Material", poly.drawSettings.sideMaterial, typeof(Material), true);
 		GUI.enabled = true;
+
+		GUI.changed = false;
+		poly.drawSettings.uvOffset = EditorGUILayout.Vector2Field("UV Offset", poly.drawSettings.uvOffset);
+		poly.drawSettings.uvScale = EditorGUILayout.Vector2Field("UV Scale", poly.drawSettings.uvScale);
+		poly.drawSettings.uvRotation = EditorGUILayout.FloatField("UV Rotation", poly.drawSettings.uvRotation);
+		if(GUI.changed) poly.Refresh();
 	}
 
 	private void GUI_CollisionSettings()

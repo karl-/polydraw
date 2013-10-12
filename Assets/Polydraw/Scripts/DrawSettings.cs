@@ -20,6 +20,7 @@ public class DrawSettings
 	public Material 	frontMaterial;					///< The frontMaterial to be applied to the front face of the mesh.
 	public Material 	sideMaterial;					///< The frontMaterial to be applied to the sides of the mesh.
 	public Vector2 		uvScale = new Vector2(1f, 1f);	///< The scale to applied when creating UV coordinates.  Different from a frontMaterial scale property (though that will also affect frontMaterial layout).
+	public Vector2 		uvOffset = new Vector2(0f, 0f);	///< 
 	public float 		uvRotation = 0f;				///< Rotation of texture in degrees.
 
 	// Sides
