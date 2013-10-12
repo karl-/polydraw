@@ -29,9 +29,12 @@ public class DrawEditor : Editor
 		Point
 	};
 	private DrawStyle drawStyle = DrawStyle.Point;
-	private int insertPoint = -1;
+	public int insertPoint = -1;
 
 	private PolydrawObject poly;
+
+	public bool snapEnabled;
+	public float snapValue;
 #endregion
 
 #region GUIContent Strings
@@ -104,6 +107,9 @@ public class DrawEditor : Editor
 	public void OnEnable()
 	{
 		poly = (PolydrawObject)target;
+
+		snapEnabled = EditorPrefs.HasKey("polydraw_snapEnabled") ? EditorPrefs.GetBool("polydraw_snapEnabled") : false;
+		snapValue= EditorPrefs.HasKey("polydraw_snapValue") ? EditorPrefs.GetFloat("polydraw_snapValue") : .25f;
 	}	
 #endregion
 
@@ -117,17 +123,17 @@ public class DrawEditor : Editor
 			ToggleEditingEnabled();
 		GUI.backgroundColor = Color.white;
 
-		GUILayout.Space(10);
+		GUILayout.Space(5);
 
 		// drawStyle = (DrawStyle)EditorGUILayout.EnumPopup("Draw Style", drawStyle);
-
+		
+		GUI_EditSettings();
+		
 		GUI.changed = false;
 
 		/**
 		 *	\brief Draw Settings
 		 */
-		GUI_InputSettings();
-
 		poly.drawSettings.generateSide = EditorGUILayout.Toggle("Generate Sides", poly.drawSettings.generateSide);
 
 		poly.t_showSideSettings = EditorGUILayout.Foldout(poly.t_showSideSettings, "Side Settings");
@@ -163,11 +169,23 @@ public class DrawEditor : Editor
 
 #region DrawSettings GUI 	// since there are so many settings, this serves as a way to keep the OnGUI function "light"
 
-	private void GUI_InputSettings()
+	private void GUI_EditSettings()
 	{
-		EditorGUILayout.HelpBox("A negative value inserts new points at the end of the line.", MessageType.Info);
-		insertPoint = EditorGUILayout.IntField("Insert Point", insertPoint);
+		bool _snapEnabled = snapEnabled;
+		float _snapValue = snapValue;
 
+		GUILayout.BeginHorizontal();
+			EditorGUILayout.PrefixLabel("Snap Enabled");
+			_snapEnabled = EditorGUILayout.Toggle(_snapEnabled);
+		GUILayout.EndHorizontal();
+		
+		_snapValue = EditorGUILayout.FloatField("Snap Value", _snapValue);
+
+		if(snapEnabled != _snapEnabled)
+			SetSnapEnabled( _snapEnabled );
+
+		if(snapValue != _snapValue)
+			SetSnapValue( _snapValue );
 	}
 
 	private void GUI_SideSettings()
@@ -207,8 +225,6 @@ public class DrawEditor : Editor
 			return;
 		}
 
-		SceneViewGUI();
-
 		if(!poly.isEditable) return;
 		
 		// Force orthographic camera and x/y axis
@@ -229,8 +245,11 @@ public class DrawEditor : Editor
 		// draws PositionHandles and delete / point no info
 		DrawHandles(points);
 
+		if( DrawInsertPointGUI(points) )
+			return;
+
 		// debug
-		DrawLines(points);
+		// DrawLines(points);
 
 		if(earlyOut) return;
 
@@ -253,11 +272,33 @@ public class DrawEditor : Editor
 		}
 	}
 
-	private void SceneViewGUI()
+	public bool DrawInsertPointGUI(Vector3[] points)
 	{
 		Handles.BeginGUI();
 
+			int n = 0;
+			for(int i = 0; i < points.Length; i++)
+			{
+				n = (i >= points.Length-1) ? 0 : i+1;
+
+				Vector3 avg = (points[i]+points[n])/2f;
+				Vector2 g = HandleUtility.WorldToGUIPoint( avg );
+				
+				if( GUI.Button(new Rect(g.x-10, g.y-10, 20, 20), "+"))
+				{
+					Undo.RegisterUndo( poly, "Add Point" );
+					if(snapEnabled)
+						lastIndex = poly.AddPoint( Round(avg, snapValue), n );
+					else
+						lastIndex = poly.AddPoint( avg, n );
+					Handles.EndGUI();
+					return true;
+				}
+			}
+
 		Handles.EndGUI();
+		
+		return false;
 	}
 
 	private void ShortcutListener(Event e)
@@ -278,6 +319,10 @@ public class DrawEditor : Editor
 			{
 				Undo.RegisterUndo(poly, "Move Point");
 				poly.SetPoint(i, p0);
+				if(snapEnabled)
+					poly.SetPoint(i, Round(p0, snapValue));
+				else
+					poly.SetPoint(i, p0);
 				poly.Refresh();
 			}
 		}
@@ -310,6 +355,22 @@ public class DrawEditor : Editor
 		}
 		Handles.DrawLine(p[p.Length-1], p[0]);
 	}
+
+	private float Round(float val, float snap)
+	{
+		return snap * Mathf.Round(val / snap);
+	}
+	
+	private Vector2 Round(Vector2 val, float snap)
+	{
+		return new Vector2(snap * Mathf.Round(val.x / snap), snap * Mathf.Round(val.y / snap));
+	}
+
+	private Vector3 Round(Vector3 val, float snap)
+	{
+		return new Vector3(snap * Mathf.Round(val.x / snap), snap * Mathf.Round(val.y / snap), snap * Mathf.Round(val.z / snap));
+	}
+
 #endregion
 
 #region Draw Style Input
@@ -325,18 +386,29 @@ public class DrawEditor : Editor
 		{
 			Undo.RegisterUndo(poly, "Add Point");
 
-			lastIndex = poly.AddPoint(GetWorldPoint(cam, e.mousePosition), insertPoint);
+			if(snapEnabled)
+				lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition), snapValue ), insertPoint);
+			else
+				lastIndex = poly.AddPoint( GetWorldPoint(cam, e.mousePosition), insertPoint);
+			
 			placingPoint = true;
 		}
 		else
 		if(e.type == EventType.MouseDrag && placingPoint)
 		{
-			poly.SetPoint(lastIndex, GetWorldPoint(cam, e.mousePosition));
+			if(snapEnabled)
+				poly.SetPoint(lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
+			else
+				poly.SetPoint(lastIndex, GetWorldPoint(cam, e.mousePosition));
 		}
 		else
 		if(e.type == EventType.MouseUp && placingPoint)
 		{
-			poly.SetPoint(lastIndex, GetWorldPoint(cam, e.mousePosition));
+			if(snapEnabled)
+				poly.SetPoint(lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
+			else
+				poly.SetPoint(lastIndex, GetWorldPoint(cam, e.mousePosition));
+
 			placingPoint = false;
 		}
 		else
@@ -393,6 +465,18 @@ public class DrawEditor : Editor
 		}
 
 		SceneView.RepaintAll();
+	}
+
+	public void SetSnapEnabled(bool enable)
+	{
+		snapEnabled = enable;
+		EditorPrefs.SetBool("polydraw_snapEnabled", snapEnabled);
+	}
+
+	public void SetSnapValue(float snapV)
+	{
+		snapValue = snapV;
+		EditorPrefs.SetFloat("polydraw_snapValue", snapValue);
 	}
 #endregion
 
