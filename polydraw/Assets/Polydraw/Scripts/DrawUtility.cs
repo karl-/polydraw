@@ -96,13 +96,13 @@ public static class DrawUtility
 		for(int i = 0; i < points.Count; i++)
 			avg += points[i];
 		avg /= (float)points.Count;
-		avg += drawSettings.uvOffset;
+		avg -= drawSettings.uvOffset;
 
 		List<Vector2> front_uv = new List<Vector2>(points.ToArray());
 
 		for(int i = 0; i < points.Count; i++)
 		{
-			front_uv[i] += drawSettings.uvOffset;
+			front_uv[i] -= drawSettings.uvOffset;
 			front_uv[i] = front_uv[i].RotateAroundPoint(avg, drawSettings.uvRotation);
 			front_uv[i] = Vector2.Scale(front_uv[i], drawSettings.uvScale);
 		}
