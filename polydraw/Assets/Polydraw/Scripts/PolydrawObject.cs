@@ -106,12 +106,12 @@ public class PolydrawObject : MonoBehaviour
 		}
 
 		gameObject.SetMesh(m);
+		bool isTrigger = gameObject.GetComponent<Collider>() == null ? false : gameObject.GetComponent<Collider>().isTrigger;
 		
 		RemoveCollisions();
 
 		Rigidbody oldRigidbody = gameObject.GetComponent<Rigidbody>();
 		bool hasRigidbody = (oldRigidbody != null);
-
 		if(hasRigidbody) 
 		{
 			CopyRigidbodySettings();
@@ -149,6 +149,9 @@ public class PolydrawObject : MonoBehaviour
 			if(!gameObject.GetComponent<Rigidbody>()) gameObject.AddComponent<Rigidbody>();
 			PasteRigidbodySettings();
 		}
+
+		if(gameObject.GetComponent<Collider>())
+			gameObject.GetComponent<Collider>().isTrigger = isTrigger;
 	}
 
 	public void DestroyMesh()
@@ -239,6 +242,7 @@ public class PolydrawObject : MonoBehaviour
 
 #region Rigidbody
 
+	private bool t_isTrigger;
 	private Vector3 t_velocity;
 	private Vector3 t_angularVelocity;
 	private float t_drag;
