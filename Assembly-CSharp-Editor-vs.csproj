@@ -44,6 +44,7 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Bugger\Editor\BuggerWindow.cs" />
      <Compile Include="Assets\Doxygen\Editor\DoxygenWindow.cs" />
      <Compile Include="Assets\Polydraw\Editor\DrawEditor.cs" />
      <Compile Include="Assets\Polydraw\Editor\DrawInspectorEditor.cs" />
@@ -54,6 +55,9 @@
      <None Include="Assets\Polydraw\Readme.txt" />
  <Reference Include="AssetStoreTools">
  <HintPath>Assets\AssetStoreTools\Editor\AssetStoreTools.dll</HintPath>
+ </Reference>
+ <Reference Include="Newtonsoft.Json">
+ <HintPath>Assets\Bugger\Newtonsoft.Json.dll</HintPath>
  </Reference>
   </ItemGroup>
   <ItemGroup>
