@@ -139,7 +139,7 @@ public class DrawEditor : Editor
 		deletePointStyle.active.background = DELETE_ICON_ACTIVE;
 
 		#if UNITY_4_3
-		Undo.UndoRedoPerformed += this.UndoRedoPerformed;
+		Undo.undoRedoPerformed += this.UndoRedoPerformed;
 		#endif
 
 		poly = (PolydrawObject)target;
@@ -331,7 +331,7 @@ public class DrawEditor : Editor
 				if( GUI.Button(handleRect, "", insertIconStyle))
 				{
 					#if UNITY_4_3
-					Undo.RegisterUndo( poly, "Add Point" );
+					Undo.RecordObject( poly, "Add Point" );
 					#else
 					Undo.RegisterUndo( poly, "Add Point" );
 					#endif
