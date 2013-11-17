@@ -508,6 +508,9 @@ public class DrawEditor : Editor
 
 					poly.handleOffset = Vector2.zero;
 					poly.isDraggingPoint = true;
+
+					poly.Refresh();
+					SceneView.RepaintAll();
 				}
 			}
 			break;
@@ -554,7 +557,6 @@ public class DrawEditor : Editor
 #if !UNITY_4_3
 	void OnValidateCommand(string command)
 	{
-		Debug.Log("OnValidateCommand");
 		switch(command)
 		{
 			case "UndoRedoPerformed":
