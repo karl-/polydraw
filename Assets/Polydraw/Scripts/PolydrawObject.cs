@@ -30,6 +30,11 @@ public class PolydrawObject : MonoBehaviour
 	public bool t_showSideSettings = true;
 	public bool t_showTextureSettings = true;
 	public bool t_showCollisionSettings = false;
+
+	#if UNITY_EDITOR
+	public int lastIndex = -1;
+	public bool isDraggingPoint = false;
+	#endif
 #endregion
 
 #region Query
