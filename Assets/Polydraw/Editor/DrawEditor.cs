@@ -432,6 +432,7 @@ public class DrawEditor : Editor
 					{
 						poly.isDraggingPoint = true;
 						poly.lastIndex = i;
+						poly.handleOffset = g-e.mousePosition;
 
 						#if UNITY_4_3
 						Undo.RecordObject(poly, "Move Point");
@@ -449,12 +450,12 @@ public class DrawEditor : Editor
 					Undo.RegisterUndo(poly, "Add Point");
 					#endif
 
-
 					if(snapEnabled)
 						poly.lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition), snapValue ), insertPoint);
 					else
 						poly.lastIndex = poly.AddPoint( GetWorldPoint(cam, e.mousePosition), insertPoint);
-					
+
+					poly.handleOffset = Vector2.zero;
 					poly.isDraggingPoint = true;
 				}
 			}
@@ -464,12 +465,7 @@ public class DrawEditor : Editor
 			{
 				if(!poly.isDraggingPoint)
 					break;
-
-				if(snapEnabled)
-					poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
-				else
-					poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition));
-						
+		
 				poly.isDraggingPoint = false;
 			}
 			break;
@@ -482,9 +478,9 @@ public class DrawEditor : Editor
 				if(poly.isDraggingPoint)
 				{
 					if(snapEnabled)
-						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
+						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition + poly.handleOffset), snapValue));
 					else
-						poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition));
+						poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition + poly.handleOffset));
 				}
 			}
 			break;
