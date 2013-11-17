@@ -25,11 +25,17 @@ using System.Collections.Generic;
 [CustomEditor(typeof(PolydrawObject))]
 public class DrawEditor : Editor
 {
-#region Members
+#region Members	
+	const bool SPIN_SELECTED_INDEX = true;	// If true, the selected index handle will spin
 
 	const int SCENEVIEW_HEADER = 40;	// accounts for the tabs and menubar at the top of the sceneview.
 	const int HANDLE_SIZE = 32;
-	private Texture2D HANDLE_ICON;
+	const int INSERT_HANDLE_SIZE = 24;
+	private Texture2D HANDLE_ICON_ACTIVE;
+	private Texture2D HANDLE_ICON_NORMAL;
+	private Texture2D INSERT_ICON_ACTIVE;
+	private Texture2D INSERT_ICON_NORMAL;
+	private GUIStyle insertIconStyle;
 
 	// draw settings
 	public enum DrawStyle
@@ -116,13 +122,20 @@ public class DrawEditor : Editor
 
 	public void OnEnable()
 	{
+		HANDLE_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Normal.png", typeof(Texture2D));
+		HANDLE_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Active.png", typeof(Texture2D));
+		INSERT_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Active.png", typeof(Texture2D));
+		INSERT_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Normal.png", typeof(Texture2D));
+
+		insertIconStyle = new GUIStyle();
+		insertIconStyle.normal.background = INSERT_ICON_NORMAL;
+		insertIconStyle.active.background = INSERT_ICON_ACTIVE;
+
 		#if UNITY_4_3
 		Undo.UndoRedoPerformed += UndoRedoPerformed;
 		#endif
 
 		poly = (PolydrawObject)target;
-
-		HANDLE_ICON = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon.png", typeof(Texture2D));
 
 		snapEnabled = EditorPrefs.HasKey("polydraw_snapEnabled") ? EditorPrefs.GetBool("polydraw_snapEnabled") : false;
 		snapValue= EditorPrefs.HasKey("polydraw_snapValue") ? EditorPrefs.GetFloat("polydraw_snapValue") : .25f;
@@ -306,15 +319,18 @@ public class DrawEditor : Editor
 
 				Vector3 avg = (points[i]+points[n])/2f;
 				Vector2 g = HandleUtility.WorldToGUIPoint( avg );
-				
-				if( GUI.Button(new Rect(g.x-10, g.y-10, 20, 20), "+"))
+
+				Rect handleRect = new Rect(g.x-INSERT_HANDLE_SIZE/2f, g.y-INSERT_HANDLE_SIZE/2f, INSERT_HANDLE_SIZE, INSERT_HANDLE_SIZE);
+				if( GUI.Button(handleRect, "", insertIconStyle))
 				{
 					Undo.RegisterUndo( poly, "Add Point" );
 					if(snapEnabled)
 						poly.lastIndex = poly.AddPoint( Round(avg, snapValue), n );
 					else
 						poly.lastIndex = poly.AddPoint( avg, n );
+					
 					Handles.EndGUI();
+					
 					return true;
 				}
 			}
@@ -336,30 +352,24 @@ public class DrawEditor : Editor
 
 	private void DrawHandles(Vector3[] p)
 	{
-		for(int i = 0; i < p.Length; i++)
-		{
-			// Vector3 p0 = p[i];
-
-			// p0 = Handles.PositionHandle(p0, Quaternion.identity);
-			// if(p0 != p[i])
-			// {
-			// 	Undo.RegisterUndo(poly, "Move Point");
-			// 	poly.SetPoint(i, p0);
-			// 	if(snapEnabled)
-			// 		poly.SetPoint(i, Round(p0, snapValue));
-			// 	else
-			// 		poly.SetPoint(i, p0);
-			// 	poly.Refresh();
-			// }
-		}
-
 		Handles.BeginGUI();
 		GUI.backgroundColor = Color.red;
 		for(int i = 0; i < p.Length; i++)
 		{
 			Vector2 g = HandleUtility.WorldToGUIPoint(p[i]);
 			Rect handleRect = new Rect(g.x-HANDLE_SIZE/2f, g.y-HANDLE_SIZE/2f, HANDLE_SIZE, HANDLE_SIZE);
-			GUI.Label(handleRect, HANDLE_ICON);
+			
+			if(i == poly.lastIndex && SPIN_SELECTED_INDEX)
+			{
+				float ro = Time.realtimeSinceStartup;
+				ro = (ro % 360) * 100f;
+				GUIUtility.RotateAroundPivot(ro, g);
+					GUI.Label(handleRect, (i == poly.lastIndex) ? HANDLE_ICON_ACTIVE : HANDLE_ICON_NORMAL);
+				GUIUtility.RotateAroundPivot(-ro, g);
+			}
+			else
+				GUI.Label(handleRect, (i == poly.lastIndex) ? HANDLE_ICON_ACTIVE : HANDLE_ICON_NORMAL);
+	
 
 			if(GUI.Button(new Rect(g.x+10, g.y-50, 25, 25), "x"))
 			{
@@ -371,6 +381,8 @@ public class DrawEditor : Editor
 		}
 		GUI.backgroundColor = Color.white;
 		Handles.EndGUI();		
+
+		SceneView.RepaintAll();
 	}
 
 	private void DrawLines(Vector3[] p)
@@ -420,12 +432,23 @@ public class DrawEditor : Editor
 					{
 						poly.isDraggingPoint = true;
 						poly.lastIndex = i;
+
+						#if UNITY_4_3
+						Undo.RecordObject(poly, "Move Point");
+						#else
+						Undo.RegisterUndo(poly, "Move Point");
+						#endif
 					}
 				}
 
 				if(!poly.isDraggingPoint)
 				{
+					#if UNITY_4_3
+					Undo.RecordObject(poly, "Add Point");
+					#else
 					Undo.RegisterUndo(poly, "Add Point");
+					#endif
+
 
 					if(snapEnabled)
 						poly.lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition), snapValue ), insertPoint);

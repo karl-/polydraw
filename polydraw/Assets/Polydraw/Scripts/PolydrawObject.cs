@@ -112,6 +112,7 @@ public class PolydrawObject : MonoBehaviour
 
 		gameObject.SetMesh(m);
 		bool isTrigger = gameObject.GetComponent<Collider>() == null ? false : gameObject.GetComponent<Collider>().isTrigger;
+		bool isConvex = gameObject.GetComponent<MeshCollider>() == null ? false : gameObject.GetComponent<MeshCollider>().convex;
 		
 		RemoveCollisions();
 
@@ -156,7 +157,11 @@ public class PolydrawObject : MonoBehaviour
 		}
 
 		if(gameObject.GetComponent<Collider>())
+		{
 			gameObject.GetComponent<Collider>().isTrigger = isTrigger;
+			if(gameObject.GetComponent<MeshCollider>())
+				gameObject.GetComponent<MeshCollider>().convex = isConvex;
+		}
 	}
 
 	public void DestroyMesh()
@@ -248,6 +253,7 @@ public class PolydrawObject : MonoBehaviour
 #region Rigidbody
 
 	private bool t_isTrigger;
+	private bool t_isConvex;
 	private Vector3 t_velocity;
 	private Vector3 t_angularVelocity;
 	private float t_drag;

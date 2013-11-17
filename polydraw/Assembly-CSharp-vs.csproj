@@ -45,6 +45,8 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\AssetStoreTools\Screenshot.cs" />
+     <Compile Include="Assets\Bugger\Bugger.cs" />
+     <Compile Include="Assets\Bugger\Parser.cs" />
      <Compile Include="Assets\Polydraw\Example\Orthographic\OrthoDemo.cs" />
      <Compile Include="Assets\Polydraw\Example\Perspective\Code\Button.cs" />
      <Compile Include="Assets\Polydraw\Example\Perspective\Code\EventListenerExample.cs" />
@@ -62,6 +64,9 @@
      <None Include="Assets\Doxygen\Editor\Resources\BaseDoxyfile.txt" />
      <None Include="Assets\Doxygen\ReadMe.txt" />
      <None Include="Assets\Polydraw\Readme.txt" />
+ <Reference Include="Newtonsoft.Json">
+ <HintPath>Assets\Bugger\Newtonsoft.Json.dll</HintPath>
+ </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
