@@ -17,10 +17,21 @@ using System.Collections.Generic;
 [CustomEditor(typeof(PolydrawObject))]
 public class DrawEditor : Editor
 {
+#region Classes
+
+	private MouseState
+	{
+		PlacingPoint,
+		DraggingPoint,
+		None
+	}
+#endregion
 
 #region Members
 
 	const int SCENEVIEW_HEADER = 40;	// accounts for the tabs and menubar at the top of the sceneview.
+	const int HANDLE_SIZE = 32;
+	private Texture2D HANDLE_ICON;
 
 	// draw settings
 	public enum DrawStyle
@@ -28,6 +39,7 @@ public class DrawEditor : Editor
 		Continuous,
 		Point
 	};
+
 	private DrawStyle drawStyle = DrawStyle.Point;
 	public int insertPoint = -1;
 
@@ -35,6 +47,8 @@ public class DrawEditor : Editor
 
 	public bool snapEnabled;
 	public float snapValue;
+
+	private int draggingPointAtIndex = -1;
 #endregion
 
 #region GUIContent Strings
@@ -107,6 +121,9 @@ public class DrawEditor : Editor
 	public void OnEnable()
 	{
 		poly = (PolydrawObject)target;
+
+		HANDLE_ICON = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon.png", typeof(Texture2D));
+		Debug.Log( (HANDLE_ICON == null ));
 
 		snapEnabled = EditorPrefs.HasKey("polydraw_snapEnabled") ? EditorPrefs.GetBool("polydraw_snapEnabled") : false;
 		snapValue= EditorPrefs.HasKey("polydraw_snapValue") ? EditorPrefs.GetFloat("polydraw_snapValue") : .25f;
@@ -231,6 +248,11 @@ public class DrawEditor : Editor
 			return;
 		}
 
+		if(e.isMouse)
+		{
+			UpdateMouseStatus(e.type);
+		}
+
 		if(!poly.isEditable) return;
 		
 		// Force orthographic camera and x/y axis
@@ -315,22 +337,25 @@ public class DrawEditor : Editor
 			poly.SetEditable(false);
 	}
 
+	private Vector2 handleOffset = Vector2.zero;
+
 	private void DrawHandles(Vector3[] p)
 	{
 		for(int i = 0; i < p.Length; i++)
 		{
-			Vector3 p0 = p[i];
-			p0 = Handles.PositionHandle(p0, Quaternion.identity);
-			if(p0 != p[i])
-			{
-				Undo.RegisterUndo(poly, "Move Point");
-				poly.SetPoint(i, p0);
-				if(snapEnabled)
-					poly.SetPoint(i, Round(p0, snapValue));
-				else
-					poly.SetPoint(i, p0);
-				poly.Refresh();
-			}
+			// Vector3 p0 = p[i];
+
+			// p0 = Handles.PositionHandle(p0, Quaternion.identity);
+			// if(p0 != p[i])
+			// {
+			// 	Undo.RegisterUndo(poly, "Move Point");
+			// 	poly.SetPoint(i, p0);
+			// 	if(snapEnabled)
+			// 		poly.SetPoint(i, Round(p0, snapValue));
+			// 	else
+			// 		poly.SetPoint(i, p0);
+			// 	poly.Refresh();
+			// }
 		}
 
 		Handles.BeginGUI();
@@ -338,6 +363,8 @@ public class DrawEditor : Editor
 		for(int i = 0; i < p.Length; i++)
 		{
 			Vector2 g = HandleUtility.WorldToGUIPoint(p[i]);
+			Rect handleRect = new Rect(g.x-HANDLE_SIZE/2f, g.y-HANDLE_SIZE/2f, HANDLE_SIZE, HANDLE_SIZE);
+			GUI.Label(handleRect, HANDLE_ICON);
 
 			if(GUI.Button(new Rect(g.x+10, g.y-50, 25, 25), "x"))
 			{
