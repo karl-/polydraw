@@ -44,20 +44,18 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Bugger\Editor\BuggerWindow.cs" />
      <Compile Include="Assets\Doxygen\Editor\DoxygenWindow.cs" />
      <Compile Include="Assets\Polydraw\Editor\DrawEditor.cs" />
      <Compile Include="Assets\Polydraw\Editor\DrawInspectorEditor.cs" />
      <Compile Include="Assets\Polydraw\Example\Perspective\Code\Editor\ButtonEditor.cs" />
+     <Compile Include="Assets\UVee\Editor\UVeeWindow.cs" />
+     <None Include="Assets\UVee\Example\credits.txt" />
      <None Include="Assets\Polydraw\Example\Art Credits.txt" />
      <None Include="Assets\Doxygen\Editor\Resources\BaseDoxyfile.txt" />
      <None Include="Assets\Doxygen\ReadMe.txt" />
      <None Include="Assets\Polydraw\Readme.txt" />
  <Reference Include="AssetStoreTools">
  <HintPath>Assets\AssetStoreTools\Editor\AssetStoreTools.dll</HintPath>
- </Reference>
- <Reference Include="Newtonsoft.Json">
- <HintPath>Assets\Bugger\Newtonsoft.Json.dll</HintPath>
  </Reference>
   </ItemGroup>
   <ItemGroup>

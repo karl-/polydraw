@@ -117,45 +117,56 @@ public static class DrawUtility
 		List<Vector3> collison_vertices = new List<Vector3>();
 		
 		for (int i=0; i < points.Count; i++) {
+			
+			int next = i >= points.Count-1 ? 0 : i+1;
+
 			side_vertices.Add( new Vector3( points[i].x, points[i].y, zOrigin + halfSideLength) );
 			side_vertices.Add( new Vector3( points[i].x, points[i].y, zOrigin - halfSideLength) );
 
+			side_vertices.Add( new Vector3( points[next].x, points[next].y, zOrigin + halfSideLength) );
+			side_vertices.Add( new Vector3( points[next].x, points[next].y, zOrigin - halfSideLength) );
+
 			collison_vertices.Add( new Vector3( points[i].x, points[i].y, collisionOrigin + colHalfSideLength) );
 			collison_vertices.Add( new Vector3( points[i].x, points[i].y, collisionOrigin - colHalfSideLength) );
+			collison_vertices.Add( new Vector3( points[next].x, points[next].y, collisionOrigin + colHalfSideLength) );
+			collison_vertices.Add( new Vector3( points[next].x, points[next].y, collisionOrigin - colHalfSideLength) );
 		}
 		
-		// these sit right on the first two.  they don't share cause that would screw with
-		// the lame way uvs are made.
-		side_vertices.Add( new Vector3( points[0].x, points[0].y, zOrigin + halfSideLength) );
-		side_vertices.Add( new Vector3( points[0].x, points[0].y, zOrigin - halfSideLength) );
-	
 		collison_vertices.Add( new Vector3( points[0].x, points[0].y, collisionOrigin + colHalfSideLength) );
 		collison_vertices.Add( new Vector3( points[0].x, points[0].y, collisionOrigin - colHalfSideLength) );
 		
 		// +6 connects it to the first 2 verts
-		int[] side_indices = new int[(side_vertices.Count*3)];
+		int[] side_indices = new int[(points.Count*6)];
 		
 		int windingOrder = 1; // assume counter-clockwise, cause y'know, we set it that way
 		
 		int v = 0;
-		for(int i = 0; i < side_indices.Length - 6; i+=3)
+		for(int i = 0; i < side_indices.Length; i+=6)
 		{			
 			// 0 is for clockwise winding order, anything else is CC
-			if(i%2!=windingOrder)
+			if(i%2 != windingOrder)
 			{
 				side_indices[i+0] = v;
 				side_indices[i+1] = v + 1;
 				side_indices[i+2] = v + 2;
+
+				side_indices[i+3] = v + 1;
+				side_indices[i+4] = v + 3;
+				side_indices[i+5] = v + 2;
 			} else {
-				side_indices[i+2] = v;
+				side_indices[i+2] = v + 0;
 				side_indices[i+1] = v + 1;
 				side_indices[i+0] = v + 2;
+				
+				side_indices[i+5] = v + 1;
+				side_indices[i+4] = v + 3;
+				side_indices[i+3] = v + 2;
 			}
-			v++;
+			v+=4;
 		}
 		/*** Finish Generating Sides ***/
 
-		List<Vector2> side_uv = CalcSideUVs(side_vertices, drawSettings.uvScale);
+		Vector2[] side_uv = CalcSideUVs(side_vertices, drawSettings);
 		m.Clear();
 		m.vertices = drawSettings.generateSide ? front_vertices.Concat(side_vertices).ToArray() : front_vertices.ToArray();
 		if(drawSettings.generateSide) {
@@ -173,7 +184,7 @@ public static class DrawUtility
 		c.Clear();
 		c.vertices = collison_vertices.ToArray();
 		c.triangles = side_indices;
-		c.uv = side_uv.ToArray();
+		c.uv = new Vector2[0];//side_uv.ToArray();
 		c.RecalculateNormals();
 		c.RecalculateBounds();
 		return true;
@@ -183,28 +194,39 @@ public static class DrawUtility
 #region UV
 	
 	// A little hacky, yes, but it works well enough to pass
-	static List<Vector2> CalcSideUVs(List<Vector3> v, Vector2 uvScale)
+	static Vector2[] CalcSideUVs(List<Vector3> v, DrawSettings drawSettings)
 	{
-		// we konw that vertices are generated in rows, in a ccwise manner.
-		// this method figures out dist between rows, and uses the known 
-		// side length to generate properly scaled uvs.
-		
-		Vector2[] uvs = new Vector2[v.Count];
+		int len = v.Count;
+		Vector2[] uvs = new Vector2[len];
+		Vector2 avg = Vector2.zero;
 
-		float curX = 0f;
-
-		uvs[0] = new Vector2(0f, v[0].z);
-		uvs[1] = new Vector2(0f, v[1].z);
-
-		for(int i = 2; i < v.Count; i+=2)
+		for(int i = 0; i < len; i += 4)
 		{
-			curX += Vector3.Distance(v[i], v[i-2]);
+			Vector2 nrm = Perpendicular(v[i].x, v[i].y, v[i+2].x, v[i+3].y);
 
-			uvs[i+0] = new Vector2(curX, v[i+0].z);
-			uvs[i+1] = new Vector2(curX, v[i+1].z);
+			uvs[i+1] = new Vector2(v[i+1].x, v[i+1].y);
+			uvs[i+0] = uvs[i+1] - nrm * drawSettings.sideLength;
+			uvs[i+3] = new Vector2(v[i+3].x, v[i+3].y);
+			uvs[i+2] = uvs[i+3] - nrm * drawSettings.sideLength;
+
+			avg += uvs[i] + uvs[i+2];
+
+		}
+		avg /= (float)len;
+
+		for(int i = 0; i < len; i++)
+		{
+			uvs[i] -= drawSettings.uvOffset;
+			uvs[i] = uvs[i].RotateAroundPoint(avg, drawSettings.uvRotation);
+			uvs[i] = Vector2.Scale(uvs[i], drawSettings.uvScale);
 		}
 
-		return ArrayMultiply(uvs, uvScale);
+		return uvs;
+	}
+
+	private static Vector2 Perpendicular(float x, float y, float x2, float y2)
+	{
+		return new Vector2( -(y2-y), x2-x ).normalized;
 	}
 
 	public static List<Vector2> ArrayMultiply(Vector2[] _uvs, Vector2 _mult)
