@@ -34,7 +34,10 @@ public class DrawEditor : Editor
 	private Texture2D HANDLE_ICON_NORMAL;
 	private Texture2D INSERT_ICON_ACTIVE;
 	private Texture2D INSERT_ICON_NORMAL;
+	private Texture2D DELETE_ICON_NORMAL;
+	private Texture2D DELETE_ICON_ACTIVE;
 	private GUIStyle insertIconStyle;
+	private GUIStyle deletePointStyle;
 
 	// draw settings
 	public enum DrawStyle
@@ -125,10 +128,15 @@ public class DrawEditor : Editor
 		HANDLE_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Active.png", typeof(Texture2D));
 		INSERT_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Active.png", typeof(Texture2D));
 		INSERT_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Normal.png", typeof(Texture2D));
+		DELETE_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/DeletePoint-Active.png", typeof(Texture2D));
+		DELETE_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/DeletePoint-Normal.png", typeof(Texture2D));
 
 		insertIconStyle = new GUIStyle();
 		insertIconStyle.normal.background = INSERT_ICON_NORMAL;
 		insertIconStyle.active.background = INSERT_ICON_ACTIVE;
+		deletePointStyle = new GUIStyle();
+		deletePointStyle.normal.background = DELETE_ICON_NORMAL;
+		deletePointStyle.active.background = DELETE_ICON_ACTIVE;
 
 		#if UNITY_4_3
 		Undo.UndoRedoPerformed += UndoRedoPerformed;
@@ -388,8 +396,14 @@ public class DrawEditor : Editor
 				#endif
 
 
-				if(GUI.Button(new Rect(g.x+10, g.y-50, 25, 25), "x"))
+				if(GUI.Button(new Rect(g.x+10, g.y-40, 25, 25), "", deletePointStyle))
 				{
+					#if UNITY_4_3
+					Undo.RecordObject(poly, "Delete Point");
+					#else
+					Undo.RegisterUndo(poly, "Delete Point");
+					#endif
+
 					poly.RemovePointAtIndex(i);
 					poly.Refresh();
 				}
