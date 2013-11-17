@@ -34,7 +34,7 @@ public class PolydrawObject : MonoBehaviour
 	#if UNITY_EDITOR
 	public int lastIndex = -1;
 	public bool isDraggingPoint = false;
-	public Vector2 handleOffset =Vector2.zero;
+	public Vector2 handleOffset = Vector2.zero;
 	#endif
 #endregion
 
