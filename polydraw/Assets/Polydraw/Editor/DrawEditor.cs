@@ -139,7 +139,7 @@ public class DrawEditor : Editor
 		deletePointStyle.active.background = DELETE_ICON_ACTIVE;
 
 		#if UNITY_4_3
-		Undo.UndoRedoPerformed += UndoRedoPerformed;
+		Undo.UndoRedoPerformed += this.UndoRedoPerformed;
 		#endif
 
 		poly = (PolydrawObject)target;
@@ -330,7 +330,12 @@ public class DrawEditor : Editor
 				Rect handleRect = new Rect(g.x-INSERT_HANDLE_SIZE/2f, g.y-INSERT_HANDLE_SIZE/2f, INSERT_HANDLE_SIZE, INSERT_HANDLE_SIZE);
 				if( GUI.Button(handleRect, "", insertIconStyle))
 				{
+					#if UNITY_4_3
 					Undo.RegisterUndo( poly, "Add Point" );
+					#else
+					Undo.RegisterUndo( poly, "Add Point" );
+					#endif
+					
 					if(snapEnabled)
 						poly.lastIndex = poly.AddPoint( Round(avg, snapValue), n );
 					else
@@ -545,17 +550,21 @@ public class DrawEditor : Editor
 				
 				Event.current.Use();
 
+				SceneView.RepaintAll();	
+
 				break;
 		}
 	}
 
-	void OnUndoRedoPerformed()
+	void UndoRedoPerformed()
 	{
 		if(poly)
 		{
 			poly.isDraggingPoint = false;
 			poly.Refresh();
 		}
+
+		SceneView.RepaintAll();
 
 		Event.current.Use();
 	}
