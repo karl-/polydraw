@@ -1,5 +1,13 @@
 #define GOLDBLUM
 
+#if UNITY_4_3 || UNITY_4_3_0 || UNITY_4_3_1 || UNITY_4_3_2 || UNITY_4_3_3 || UNITY_4_3_4 || UNITY_4_3_5
+#define UNITY_4_3
+#elif UNITY_4_0 || UNITY_4_0_1 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3 || UNITY_4_3_0 || UNITY_4_3_1 || UNITY_4_3_2 || UNITY_4_3_3 || UNITY_4_3_4 || UNITY_4_3_5
+#define UNITY_4
+#elif UNITY_3_0 || UNITY_3_0_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4 || UNITY_3_5
+#define UNITY_3
+#endif
+
 using UnityEditor;
 using UnityEngine;
 using System;
@@ -17,16 +25,6 @@ using System.Collections.Generic;
 [CustomEditor(typeof(PolydrawObject))]
 public class DrawEditor : Editor
 {
-#region Classes
-
-	private MouseState
-	{
-		PlacingPoint,
-		DraggingPoint,
-		None
-	}
-#endregion
-
 #region Members
 
 	const int SCENEVIEW_HEADER = 40;	// accounts for the tabs and menubar at the top of the sceneview.
@@ -47,8 +45,6 @@ public class DrawEditor : Editor
 
 	public bool snapEnabled;
 	public float snapValue;
-
-	private int draggingPointAtIndex = -1;
 #endregion
 
 #region GUIContent Strings
@@ -120,10 +116,13 @@ public class DrawEditor : Editor
 
 	public void OnEnable()
 	{
+		#if UNITY_4_3
+		Undo.UndoRedoPerformed += UndoRedoPerformed;
+		#endif
+
 		poly = (PolydrawObject)target;
 
 		HANDLE_ICON = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon.png", typeof(Texture2D));
-		Debug.Log( (HANDLE_ICON == null ));
 
 		snapEnabled = EditorPrefs.HasKey("polydraw_snapEnabled") ? EditorPrefs.GetBool("polydraw_snapEnabled") : false;
 		snapValue= EditorPrefs.HasKey("polydraw_snapValue") ? EditorPrefs.GetFloat("polydraw_snapValue") : .25f;
@@ -248,10 +247,6 @@ public class DrawEditor : Editor
 			return;
 		}
 
-		if(e.isMouse)
-		{
-			UpdateMouseStatus(e.type);
-		}
 
 		if(!poly.isEditable) return;
 		
@@ -290,7 +285,7 @@ public class DrawEditor : Editor
 		switch(drawStyle)
 		{
 			case DrawStyle.Point:
-				PointDrawStyleInput(sceneView.camera, e);
+				PointDrawStyleInput(sceneView.camera, e, points);
 				break;
 			case DrawStyle.Continuous:
 				ContinuousDrawStyleInput(sceneView.camera, e);
@@ -316,9 +311,9 @@ public class DrawEditor : Editor
 				{
 					Undo.RegisterUndo( poly, "Add Point" );
 					if(snapEnabled)
-						lastIndex = poly.AddPoint( Round(avg, snapValue), n );
+						poly.lastIndex = poly.AddPoint( Round(avg, snapValue), n );
 					else
-						lastIndex = poly.AddPoint( avg, n );
+						poly.lastIndex = poly.AddPoint( avg, n );
 					Handles.EndGUI();
 					return true;
 				}
@@ -337,7 +332,7 @@ public class DrawEditor : Editor
 			poly.SetEditable(false);
 	}
 
-	private Vector2 handleOffset = Vector2.zero;
+	// private Vector2 handleOffset = Vector2.zero;
 
 	private void DrawHandles(Vector3[] p)
 	{
@@ -408,46 +403,68 @@ public class DrawEditor : Editor
 
 #region Draw Style Input
 
-	int lastIndex = 0;
-	bool placingPoint = false;
-
-	private void PointDrawStyleInput(Camera cam, Event e)
+	private void PointDrawStyleInput(Camera cam, Event e, Vector3[] p)
 	{
 		if(!e.isMouse) return;
 
-		if(e.type == EventType.MouseDown)
+		switch(e.type)
 		{
-			Undo.RegisterUndo(poly, "Add Point");
+			case EventType.MouseDown:
+			{
+				for(int i = 0; i < p.Length; i++)
+				{
+					Vector2 g = HandleUtility.WorldToGUIPoint(p[i]);
+					Rect handleRect = new Rect(g.x-HANDLE_SIZE/2f, g.y-HANDLE_SIZE/2f, HANDLE_SIZE, HANDLE_SIZE);
+					
+					if(handleRect.Contains(e.mousePosition))
+					{
+						poly.isDraggingPoint = true;
+						poly.lastIndex = i;
+					}
+				}
 
-			if(snapEnabled)
-				lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition), snapValue ), insertPoint);
-			else
-				lastIndex = poly.AddPoint( GetWorldPoint(cam, e.mousePosition), insertPoint);
-			
-			placingPoint = true;
-		}
-		else
-		if(e.type == EventType.MouseDrag && placingPoint)
-		{
-			if(snapEnabled)
-				poly.SetPoint(lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
-			else
-				poly.SetPoint(lastIndex, GetWorldPoint(cam, e.mousePosition));
-		}
-		else
-		if(e.type == EventType.MouseUp && placingPoint)
-		{
-			if(snapEnabled)
-				poly.SetPoint(lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
-			else
-				poly.SetPoint(lastIndex, GetWorldPoint(cam, e.mousePosition));
+				if(!poly.isDraggingPoint)
+				{
+					Undo.RegisterUndo(poly, "Add Point");
 
-			placingPoint = false;
-		}
-		else
-		{
-			placingPoint = false;
-			return;
+					if(snapEnabled)
+						poly.lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition), snapValue ), insertPoint);
+					else
+						poly.lastIndex = poly.AddPoint( GetWorldPoint(cam, e.mousePosition), insertPoint);
+					
+					poly.isDraggingPoint = true;
+				}
+			}
+			break;
+
+			case EventType.MouseUp:
+			{
+				if(!poly.isDraggingPoint)
+					break;
+
+				if(snapEnabled)
+					poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
+				else
+					poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition));
+						
+				poly.isDraggingPoint = false;
+			}
+			break;
+
+			case EventType.MouseDrag:
+				goto default;
+
+			default:
+			{
+				if(poly.isDraggingPoint)
+				{
+					if(snapEnabled)
+						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition), snapValue));
+					else
+						poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition));
+				}
+			}
+			break;
 		}
 
 		poly.Refresh();
@@ -475,6 +492,14 @@ public class DrawEditor : Editor
 
 				break;
 		}
+	}
+
+	void OnUndoRedoPerformed()
+	{
+		if(poly)
+			poly.Refresh();
+				
+		Event.current.Use();
 	}
 #endregion
 
