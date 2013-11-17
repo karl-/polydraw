@@ -1,4 +1,4 @@
-#define GOLDBLUM
+#define SPIN_SELECTED_INDEX
 
 #if UNITY_4_3 || UNITY_4_3_0 || UNITY_4_3_1 || UNITY_4_3_2 || UNITY_4_3_3 || UNITY_4_3_4 || UNITY_4_3_5
 #define UNITY_4_3
@@ -26,7 +26,6 @@ using System.Collections.Generic;
 public class DrawEditor : Editor
 {
 #region Members	
-	const bool SPIN_SELECTED_INDEX = true;	// If true, the selected index handle will spin
 
 	const int SCENEVIEW_HEADER = 40;	// accounts for the tabs and menubar at the top of the sceneview.
 	const int HANDLE_SIZE = 32;
@@ -346,6 +345,21 @@ public class DrawEditor : Editor
 		
 		if(e.keyCode == KeyCode.Return)
 			poly.SetEditable(false);
+		
+		if(e.keyCode == KeyCode.Backspace)
+		{
+			if(poly.lastIndex < 0)
+				return;
+
+			#if UNITY_4_3
+			Undo.RecordObject(poly, "Delete Point");
+			#else
+			Undo.RegisterUndo(poly, "Delete Point");
+			#endif
+
+			poly.RemovePointAtIndex(poly.lastIndex);
+			poly.Refresh();
+		}
 	}
 
 	// private Vector2 handleOffset = Vector2.zero;
@@ -359,26 +373,31 @@ public class DrawEditor : Editor
 			Vector2 g = HandleUtility.WorldToGUIPoint(p[i]);
 			Rect handleRect = new Rect(g.x-HANDLE_SIZE/2f, g.y-HANDLE_SIZE/2f, HANDLE_SIZE, HANDLE_SIZE);
 			
-			if(i == poly.lastIndex && SPIN_SELECTED_INDEX)
+			if(i == poly.lastIndex)
 			{
-				float ro = Time.realtimeSinceStartup;
-				ro = (ro % 360) * 100f;
-				GUIUtility.RotateAroundPivot(ro, g);
-					GUI.Label(handleRect, (i == poly.lastIndex) ? HANDLE_ICON_ACTIVE : HANDLE_ICON_NORMAL);
-				GUIUtility.RotateAroundPivot(-ro, g);
+				#if SPIN_SELECTED_INDEX
+				{
+					float ro = Time.realtimeSinceStartup;
+					ro = (ro % 360) * 100f;
+					GUIUtility.RotateAroundPivot(ro, g);
+						GUI.Label(handleRect, HANDLE_ICON_ACTIVE);
+					GUIUtility.RotateAroundPivot(-ro, g);
+				}
+				#else
+					GUI.Label(handleRect, HANDLE_ICON_ACTIVE);
+				#endif
+
+
+				if(GUI.Button(new Rect(g.x+10, g.y-50, 25, 25), "x"))
+				{
+					poly.RemovePointAtIndex(i);
+					poly.Refresh();
+				}
 			}
 			else
-				GUI.Label(handleRect, (i == poly.lastIndex) ? HANDLE_ICON_ACTIVE : HANDLE_ICON_NORMAL);
-	
-
-			if(GUI.Button(new Rect(g.x+10, g.y-50, 25, 25), "x"))
-			{
-				poly.RemovePointAtIndex(i);
-				poly.Refresh();
-			}
-
-			GUI.Label(new Rect(g.x+45, g.y-50, 200, 25), "Point: " + i.ToString());	
+				GUI.Label(handleRect, HANDLE_ICON_NORMAL);
 		}
+
 		GUI.backgroundColor = Color.white;
 		Handles.EndGUI();		
 
@@ -505,7 +524,10 @@ public class DrawEditor : Editor
 		{
 			case "UndoRedoPerformed":
 				if(poly)
+				{
+					poly.isDraggingPoint = false;
 					poly.Refresh();
+				}
 				
 				Event.current.Use();
 
@@ -516,8 +538,11 @@ public class DrawEditor : Editor
 	void OnUndoRedoPerformed()
 	{
 		if(poly)
+		{
+			poly.isDraggingPoint = false;
 			poly.Refresh();
-				
+		}
+
 		Event.current.Use();
 	}
 #endregion
