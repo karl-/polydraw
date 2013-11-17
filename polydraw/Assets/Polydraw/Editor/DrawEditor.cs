@@ -122,7 +122,7 @@ public class DrawEditor : Editor
 		EditorUtility.UnloadUnusedAssets();
 	} 
 
-	public void OnEnable()
+	private void OnEnable()
 	{
 		HANDLE_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Normal.png", typeof(Texture2D));
 		HANDLE_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Active.png", typeof(Texture2D));
@@ -139,14 +139,22 @@ public class DrawEditor : Editor
 		deletePointStyle.active.background = DELETE_ICON_ACTIVE;
 
 		#if UNITY_4_3
-		Undo.undoRedoPerformed += this.UndoRedoPerformed;
+			if(Undo.undoRedoPerformed != this.UndoRedoPerformed)
+				Undo.undoRedoPerformed += this.UndoRedoPerformed;
 		#endif
 
 		poly = (PolydrawObject)target;
 
 		snapEnabled = EditorPrefs.HasKey("polydraw_snapEnabled") ? EditorPrefs.GetBool("polydraw_snapEnabled") : false;
 		snapValue= EditorPrefs.HasKey("polydraw_snapValue") ? EditorPrefs.GetFloat("polydraw_snapValue") : .25f;
-	}	
+	}
+
+	private void OnDisable()
+	{
+		#if UNITY_4_3
+		Undo.undoRedoPerformed -= this.UndoRedoPerformed;
+		#endif
+	}
 #endregion
 
 #region Interface
@@ -165,7 +173,7 @@ public class DrawEditor : Editor
 		
 		GUI_EditSettings();
 		
-		GUI.changed = false;
+		bool guiChanged = false;
 
 		/**
 		 *	\brief Draw Settings
@@ -174,20 +182,24 @@ public class DrawEditor : Editor
 
 		poly.t_showSideSettings = EditorGUILayout.Foldout(poly.t_showSideSettings, "Side Settings");
 		if(poly.t_showSideSettings)
-			GUI_SideSettings();
+			if (GUI_SideSettings() )
+				guiChanged = true;
 
 		poly.t_showTextureSettings = EditorGUILayout.Foldout(poly.t_showTextureSettings, "Texture Settings");
 		if(poly.t_showTextureSettings)
-			GUI_TextureSettings();
+			if (GUI_TextureSettings() )
+				guiChanged = true;
 
 		poly.t_showCollisionSettings = EditorGUILayout.Foldout(poly.t_showCollisionSettings, "Collision Settings");
 		if(poly.t_showCollisionSettings)
-			GUI_CollisionSettings();
-
-		if(GUI.changed) 
+			if( GUI_CollisionSettings() )
+				guiChanged = true;
+		
+		if(guiChanged) 
 		{
 			EditorUtility.SetDirty(poly);
 			poly.Refresh();
+			SceneView.RepaintAll();
 		}
 
 		GUILayout.Space(10);
@@ -224,15 +236,21 @@ public class DrawEditor : Editor
 			SetSnapValue( _snapValue );
 	}
 
-	private void GUI_SideSettings()
+	private bool GUI_SideSettings()
 	{
+		EditorGUI.BeginChangeCheck();
+
 		poly.drawSettings.anchor = (Draw.Anchor)EditorGUILayout.EnumPopup(gc_anchor, poly.drawSettings.anchor);
 		poly.drawSettings.faceOffset = EditorGUILayout.FloatField(gc_faceOffset, poly.drawSettings.faceOffset);
 		poly.drawSettings.sideLength = EditorGUILayout.FloatField(gc_sideLength, poly.drawSettings.sideLength);
+	
+		return EditorGUI.EndChangeCheck();
 	}
 
-	private void GUI_TextureSettings()
+	private bool GUI_TextureSettings()
 	{
+		EditorGUI.BeginChangeCheck();
+	
 		poly.drawSettings.frontMaterial = (Material)EditorGUILayout.ObjectField("Front Material", poly.drawSettings.frontMaterial, typeof(Material), true);
 		GUI.enabled = poly.drawSettings.generateSide;
 		poly.drawSettings.sideMaterial = (Material)EditorGUILayout.ObjectField("Side Material", poly.drawSettings.sideMaterial, typeof(Material), true);
@@ -242,16 +260,20 @@ public class DrawEditor : Editor
 		poly.drawSettings.uvOffset = EditorGUILayout.Vector2Field("UV Offset", poly.drawSettings.uvOffset);
 		poly.drawSettings.uvScale = EditorGUILayout.Vector2Field("UV Scale", poly.drawSettings.uvScale);
 		poly.drawSettings.uvRotation = EditorGUILayout.FloatField("UV Rotation", poly.drawSettings.uvRotation);
-		if(GUI.changed) poly.Refresh();
+
+		return EditorGUI.EndChangeCheck();
 	}
 
-	private void GUI_CollisionSettings()
+	private bool GUI_CollisionSettings()
 	{
+		EditorGUI.BeginChangeCheck();
+		
 		poly.drawSettings.colliderType = (Draw.ColliderType)EditorGUILayout.EnumPopup(gc_colliderType, poly.drawSettings.colliderType);
 
 		poly.drawSettings.colDepth = EditorGUILayout.FloatField(gc_colDepth, poly.drawSettings.colDepth);
 		poly.drawSettings.colAnchor = (Draw.Anchor)EditorGUILayout.EnumPopup(gc_colAnchor, poly.drawSettings.colAnchor); 
 
+		return EditorGUI.EndChangeCheck();
 	}
 #endregion
 
@@ -261,15 +283,16 @@ public class DrawEditor : Editor
 	{		
 		Event e = Event.current;
 
+		#if !UNITY_4_3
 		if(e.type == EventType.ValidateCommand)
 		{
 			OnValidateCommand(Event.current.commandName);
 			return;
 		}
-
-
-		if(!poly.isEditable) return;
+		#endif
 		
+		if(poly && !poly.isEditable) return;
+
 		// Force orthographic camera and x/y axis
 		SceneView sceneView = SceneView.lastActiveSceneView;
 		if(!sceneView) return;
@@ -282,7 +305,6 @@ public class DrawEditor : Editor
 		// listen for shortcuts
 		ShortcutListener(e);
 
-		if(poly && !poly.isEditable) return;
 
 		// draw handles
 		// draws PositionHandles and delete / point no info
@@ -290,9 +312,6 @@ public class DrawEditor : Editor
 
 		if( DrawInsertPointGUI(points) )
 			return;
-
-		// debug
-		// DrawLines(points);
 
 		if(earlyOut) return;
 
@@ -471,12 +490,6 @@ public class DrawEditor : Editor
 						poly.isDraggingPoint = true;
 						poly.lastIndex = i;
 						poly.handleOffset = g-e.mousePosition;
-
-						#if UNITY_4_3
-						Undo.RecordObject(poly, "Move Point");
-						#else
-						Undo.RegisterUndo(poly, "Move Point");
-						#endif
 					}
 				}
 
@@ -509,24 +522,25 @@ public class DrawEditor : Editor
 			break;
 
 			case EventType.MouseDrag:
-				goto default;
 
-			default:
-			{
 				if(poly.isDraggingPoint)
 				{
+					#if UNITY_4_3
+					Undo.RecordObject(poly, "Move Point");
+					#else
+					Undo.RegisterUndo(poly, "Move Point");
+					#endif
+
 					if(snapEnabled)
 						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition + poly.handleOffset), snapValue));
 					else
 						poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition + poly.handleOffset));
 				}
-			}
+
+				poly.Refresh();
+				SceneView.RepaintAll();
 			break;
 		}
-
-		poly.Refresh();
-
-		SceneView.RepaintAll();
 	}
 
 	private void ContinuousDrawStyleInput(Camera cam, Event e)
@@ -537,8 +551,10 @@ public class DrawEditor : Editor
 
 #region Event
 
+#if !UNITY_4_3
 	void OnValidateCommand(string command)
 	{
+		Debug.Log("OnValidateCommand");
 		switch(command)
 		{
 			case "UndoRedoPerformed":
@@ -555,6 +571,7 @@ public class DrawEditor : Editor
 				break;
 		}
 	}
+#endif
 
 	void UndoRedoPerformed()
 	{
@@ -565,8 +582,6 @@ public class DrawEditor : Editor
 		}
 
 		SceneView.RepaintAll();
-
-		Event.current.Use();
 	}
 #endregion
 
