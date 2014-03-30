@@ -51,7 +51,7 @@ public static class DrawUtility
 		float halfSideLength = drawSettings.sideLength/2f;
 		float colHalfSideLength = drawSettings.colDepth/2f;
 		
-		if(drawSettings.axis == Axis.Up) 
+		if(drawSettings.axis != Axis.Forward) 
 		{
 			halfSideLength = -halfSideLength;
 			colHalfSideLength = -colHalfSideLength;
@@ -173,7 +173,7 @@ public static class DrawUtility
 		}
 		/*** Finish Generating Sides ***/
 
-		Vector2[] side_uv = CalcSideUVs(side_vertices, drawSettings);
+		Vector2[] side_uv = CalcSideUVs(side_vertices.ToVector2(drawSettings.axis), drawSettings);
 		m.Clear();
 		m.vertices = drawSettings.generateSide ? front_vertices.Concat(side_vertices).ToArray() : front_vertices.ToArray();
 		if(drawSettings.generateSide) {
@@ -201,7 +201,7 @@ public static class DrawUtility
 #region UV
 	
 	// A little hacky, yes, but it works well enough to pass
-	static Vector2[] CalcSideUVs(List<Vector3> v, DrawSettings drawSettings)
+	static Vector2[] CalcSideUVs(List<Vector2> v, DrawSettings drawSettings)
 	{
 		int len = v.Count;
 		Vector2[] uvs = new Vector2[len];
@@ -211,9 +211,9 @@ public static class DrawUtility
 		{
 			Vector2 nrm = Perpendicular(v[i].x, v[i].y, v[i+2].x, v[i+3].y);
 
-			uvs[i+1] = new Vector2(v[i+1].x, v[i+1].y);
+			uvs[i+1] = v[i+1];
 			uvs[i+0] = uvs[i+1] - nrm * drawSettings.sideLength;
-			uvs[i+3] = new Vector2(v[i+3].x, v[i+3].y);
+			uvs[i+3] = v[i+3];
 			uvs[i+2] = uvs[i+3] - nrm * drawSettings.sideLength;
 
 			avg += uvs[i] + uvs[i+2];
