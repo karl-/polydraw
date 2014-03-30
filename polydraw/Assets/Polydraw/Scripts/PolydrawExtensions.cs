@@ -48,11 +48,19 @@ public static class PolydrawExtensions
 		return new Vector3(v2.x, v2.y, z);
 	}
 
-	public static Vector3[] ToVector3(this List<Vector2> v2, Axis axis, float z)
+	public static Vector3[] ToVector3(this Vector2[] v2, Axis axis, float z)
 	{
-		Vector3[] v = new Vector3[v2.Count];
+		Vector3[] v = new Vector3[v2.Length];
 		for(int i = 0; i < v.Length; i++)
 			v[i] = v2[i].ToVector3(axis, z);
+		return v;
+	}
+
+	public static List<Vector3> ToVector3(this List<Vector2> v2, Axis axis, float z)
+	{
+		List<Vector3> v = new List<Vector3>();
+		for(int i = 0; i < v2.Count; i++)
+			v.Add(v2[i].ToVector3(axis, z));
 		return v;
 	}
 

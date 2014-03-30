@@ -401,10 +401,7 @@ public class Draw : MonoBehaviour
 				DrawPreviewMesh(userPoints);
 
 			if(drawLineRenderer)
-				DrawLineRenderer( transform.VerticesInWorldSpace(
-					userPoints, 
-					drawSettings.zPosition + drawSettings.faceOffset),
-					true );		
+				DrawLineRenderer( transform.ToWorldSpace(userPoints.ToVector3(drawSettings.axis, drawSettings.zPosition + drawSettings.faceOffset)), true);
 		}
 	}	
 	

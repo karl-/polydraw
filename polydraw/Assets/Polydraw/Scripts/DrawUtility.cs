@@ -47,9 +47,16 @@ public static class DrawUtility
 
 		float zOrigin = 0f;
 		float collisionOrigin = 0f;
+
 		float halfSideLength = drawSettings.sideLength/2f;
 		float colHalfSideLength = drawSettings.colDepth/2f;
 		
+		if(drawSettings.axis == Axis.Up) 
+		{
+			halfSideLength = -halfSideLength;
+			colHalfSideLength = -colHalfSideLength;
+		}
+
 		switch(drawSettings.anchor)
 		{
 			case Draw.Anchor.Front:
@@ -82,13 +89,12 @@ public static class DrawUtility
 				break;	
 		}
 
-
 		/*** Generate Front Face ***/
 		Triangulator tr = new Triangulator(points);
 		int[] front_indices = tr.Triangulate();
 	   
 		// Create the Vector3 vertices
-		List<Vector3> front_vertices = VerticesWithPoints(points, drawSettings.axis, zOrigin - halfSideLength);
+		List<Vector3> front_vertices = points.ToVector3(drawSettings.axis, zOrigin - halfSideLength);
 
 		Vector2 avg = Vector3.zero;
 		for(int i = 0; i < points.Count; i++)
@@ -118,20 +124,23 @@ public static class DrawUtility
 			
 			int next = i >= points.Count-1 ? 0 : i+1;
 
-			side_vertices.Add( new Vector3( points[i].x, points[i].y, zOrigin + halfSideLength) );
-			side_vertices.Add( new Vector3( points[i].x, points[i].y, zOrigin - halfSideLength) );
+			Vector2 cur = points[i];
+			Vector2 nex = points[next];
 
-			side_vertices.Add( new Vector3( points[next].x, points[next].y, zOrigin + halfSideLength) );
-			side_vertices.Add( new Vector3( points[next].x, points[next].y, zOrigin - halfSideLength) );
+			side_vertices.Add( cur.ToVector3(drawSettings.axis, zOrigin + halfSideLength) );
+			side_vertices.Add( cur.ToVector3(drawSettings.axis, zOrigin - halfSideLength) );
 
-			collison_vertices.Add( new Vector3( points[i].x, points[i].y, collisionOrigin + colHalfSideLength) );
-			collison_vertices.Add( new Vector3( points[i].x, points[i].y, collisionOrigin - colHalfSideLength) );
-			collison_vertices.Add( new Vector3( points[next].x, points[next].y, collisionOrigin + colHalfSideLength) );
-			collison_vertices.Add( new Vector3( points[next].x, points[next].y, collisionOrigin - colHalfSideLength) );
+			side_vertices.Add( nex.ToVector3(drawSettings.axis, zOrigin + halfSideLength) );
+			side_vertices.Add( nex.ToVector3(drawSettings.axis, zOrigin - halfSideLength) );
+
+			collison_vertices.Add( cur.ToVector3(drawSettings.axis, collisionOrigin + colHalfSideLength) );
+			collison_vertices.Add( cur.ToVector3(drawSettings.axis, collisionOrigin - colHalfSideLength) );
+			collison_vertices.Add( nex.ToVector3(drawSettings.axis, collisionOrigin + colHalfSideLength) );
+			collison_vertices.Add( nex.ToVector3(drawSettings.axis, collisionOrigin - colHalfSideLength) );
 		}
 		
-		collison_vertices.Add( new Vector3( points[0].x, points[0].y, collisionOrigin + colHalfSideLength) );
-		collison_vertices.Add( new Vector3( points[0].x, points[0].y, collisionOrigin - colHalfSideLength) );
+		collison_vertices.Add( points[0].ToVector3(drawSettings.axis, collisionOrigin + colHalfSideLength) );
+		collison_vertices.Add( points[0].ToVector3(drawSettings.axis, collisionOrigin - colHalfSideLength) );
 		
 		// +6 connects it to the first 2 verts
 		int[] side_indices = new int[(points.Count*6)];
@@ -281,47 +290,6 @@ public static class DrawUtility
 			return Mathf.Abs(Triangulator.Area(points));
 		else
 			return 0f;
-	}
-
-	/**
-	 *	\brief Takes list of user points and converts them to world points.
-	 *	\returns A Vector3 array of resulting world points.
-	 *	@param _points The user points to convert to world space.  Relative to Draw gameObject.
-	 *	@param _zPosition The Z position to anchor points to.  Not affected by #faceOffset at this point.
-	 */
-	public static Vector3[] VerticesInWorldSpace(this Transform t, List<Vector2> _points, float _zPosition)
-	{
-		Vector3[] v = new Vector3[_points.Count];
-
-		for(int i = 0; i < _points.Count; i++)
-			v[i] = t.TransformPoint(new Vector3(_points[i].x, _points[i].y, _zPosition));
-		
-		return v;			
-	}
-
-	/**
-	 *	\brief Takes list of user points and converts them to Vector3 points with supplied Z value.
-	 *	\returns A Vector3 array of resulting points.
-	 *	@param _points The user points to convert to world space.  Relative to Draw gameObject.
-	 *	@param _zPosition The Z position to anchor points to.  Not affected by #faceOffset at this point.
-	 */
-	public static List<Vector3> VerticesWithPoints(List<Vector2> _points, Axis axis, float _zPosition)
-	{
-		List<Vector3> v = new List<Vector3>();
-			
-		switch(axis)
-		{
-			case Axis.Forward:
-				for(int i = 0; i < _points.Count; i++)
-					v.Add(new Vector3(_points[i].x, _points[i].y, _zPosition));
-				break;	
-
-			case Axis.Up:
-				for(int i = 0; i < _points.Count; i++)
-					v.Add(new Vector3(_points[i].x, _zPosition, _points[i].y));
-				break;	
-		}
-		return v;
 	}
 
 	static int[] ShiftTriangles(int[] tris, int offset)

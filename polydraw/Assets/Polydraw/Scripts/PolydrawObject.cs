@@ -237,10 +237,24 @@ public class PolydrawObject : MonoBehaviour
 			float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
 			float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
 
-			boxColliderObj.transform.position = new Vector3( x, y, zPos_collider);
+			boxColliderObj.transform.position = new Vector2(x,y).ToVector3(drawSettings.axis, zPos_collider);
 			
-			boxColliderObj.transform.localScale = new Vector3(length, BOX_COLLIDER_SIZE, drawSettings.colDepth);
-			boxColliderObj.transform.rotation = Quaternion.Euler( new Vector3(0f, 0f, angle) );
+			boxColliderObj.transform.localScale = new Vector2(length, BOX_COLLIDER_SIZE).ToVector3(drawSettings.axis, drawSettings.colDepth);
+			
+			Vector3 rota;
+			switch(drawSettings.axis)	
+			{
+				case Axis.Up:
+					rota = new Vector3(0f, -angle, 0f);
+					break;
+				case Axis.Right:
+					rota = new Vector3(angle, 0f, 0f);
+					break;
+				default:
+					rota = new Vector3(0f, 0f, angle);
+					break;
+			}
+			boxColliderObj.transform.rotation = Quaternion.Euler( rota );
 			boxColliderObj.transform.position += transform.position;
 			boxColliderObj.transform.parent = transform;
 
