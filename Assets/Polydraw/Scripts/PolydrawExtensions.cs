@@ -9,29 +9,50 @@ public static class PolydrawExtensions
 
 #region Conversion
 
-	public static List<Vector2> ToVector2(this Vector3[] v)
+	public static List<Vector2> ToVector2(this Vector3[] v, Axis axis)
 	{
 		List<Vector2> p = new List<Vector2>();
 		for(int i = 0; i < v.Length; i++)
-			p.Add(v[i]);
+		{
+			p.Add(v[i].ToVector2(axis));
+		}
 		return p;
 	}
 
-	public static Vector3 ToVector3(this Vector2 v2)
+	public static Vector2 ToVector2(this Vector3 v3, Axis axis)
 	{
-		return new Vector3(v2.x, v2.y, 0f);
+		switch(axis)
+		{
+			case Axis.Up:
+				return new Vector2(v3.x, v3.z);
+
+			case Axis.Right:
+				return new Vector2(v3.z, v3.y);
+
+			default:
+				return v3;
+		}
 	}
 
-	public static Vector3 ToVector3(this Vector2 v2, float z)
+	public static Vector3 ToVector3(this Vector2 v2, Axis axis, float z)
 	{
+		switch(axis)
+		{
+			case Axis.Up:
+				return new Vector3(v2.x, z, v2.y);
+
+			case Axis.Right:
+				return new Vector3(z, v2.y, v2.x);
+		}
+
 		return new Vector3(v2.x, v2.y, z);
 	}
 
-	public static Vector3[] ToVector3(this List<Vector2> v2, float z)
+	public static Vector3[] ToVector3(this List<Vector2> v2, Axis axis, float z)
 	{
 		Vector3[] v = new Vector3[v2.Count];
 		for(int i = 0; i < v.Length; i++)
-			v[i] = new Vector3(v2[i].x, v2[i].y, z);
+			v[i] = v2[i].ToVector3(axis, z);
 		return v;
 	}
 
@@ -60,7 +81,7 @@ public static class PolydrawExtensions
 	{
 		if(!poly.isValid) return;
 
-		Vector3[] v = poly.transform.ToWorldSpace(poly.points.ToVector3(poly.drawSettings.zPosition));
+		Vector3[] v = poly.transform.ToWorldSpace(poly.points.ToVector3(poly.drawSettings.axis, poly.drawSettings.zPosition));
 
 		Vector3 avg = Vector3.zero;
 		
@@ -72,7 +93,7 @@ public static class PolydrawExtensions
 		for(int i = 0; i < v.Length; i++)
 			v[i] -= avg;
 
-		poly.points = v.ToVector2();
+		poly.points = v.ToVector2(poly.drawSettings.axis);
 
 		poly.Refresh();
 

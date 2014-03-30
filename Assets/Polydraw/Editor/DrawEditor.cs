@@ -1,10 +1,8 @@
-#define SPIN_SELECTED_INDEX
-
-#if UNITY_4_3 || UNITY_4_3_0 || UNITY_4_3_1 || UNITY_4_3_2 || UNITY_4_3_3 || UNITY_4_3_4 || UNITY_4_3_5
+#if UNITY_4_3 || UNITY_4_3_0 || UNITY_4_3_1 || UNITY_4_3_2 || UNITY_4_3_3 || UNITY_4_3_4 || UNITY_4_3_5 || UNITY_4_3_6 || UNITY_4_3_7 || UNITY_4_3_8 || UNITY_4_3_9 || UNITY_4_4 || UNITY_4_4_0 || UNITY_4_4_1 || UNITY_4_4_2 || UNITY_4_4_3 || UNITY_4_4_4 || UNITY_4_4_5 || UNITY_4_4_6 || UNITY_4_4_7 || UNITY_4_4_8 || UNITY_4_4_9 || UNITY_4_5 || UNITY_4_5_0 || UNITY_4_5_1 || UNITY_4_5_2 || UNITY_4_5_3 || UNITY_4_5_4 || UNITY_4_5_5 || UNITY_4_5_6 || UNITY_4_5_7 || UNITY_4_5_8 || UNITY_4_5_9 || UNITY_4_6 || UNITY_4_6_0 || UNITY_4_6_1 || UNITY_4_6_2 || UNITY_4_6_3 || UNITY_4_6_4 || UNITY_4_6_5 || UNITY_4_6_6 || UNITY_4_6_7 || UNITY_4_6_8 || UNITY_4_6_9 || UNITY_4_7 || UNITY_4_7_0 || UNITY_4_7_1 || UNITY_4_7_2 || UNITY_4_7_3 || UNITY_4_7_4 || UNITY_4_7_5 || UNITY_4_7_6 || UNITY_4_7_7 || UNITY_4_7_8 || UNITY_4_7_9 || UNITY_4_8 || UNITY_4_8_0 || UNITY_4_8_1 || UNITY_4_8_2 || UNITY_4_8_3 || UNITY_4_8_4 || UNITY_4_8_5 || UNITY_4_8_6 || UNITY_4_8_7 || UNITY_4_8_8 || UNITY_4_8_9
 #define UNITY_4_3
-#elif UNITY_4_0 || UNITY_4_0_1 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3 || UNITY_4_3_0 || UNITY_4_3_1 || UNITY_4_3_2 || UNITY_4_3_3 || UNITY_4_3_4 || UNITY_4_3_5
+#elif UNITY_4_0 || UNITY_4_0_1 || UNITY_4_1 || UNITY_4_2
 #define UNITY_4
-#elif UNITY_3_0 || UNITY_3_0_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4 || UNITY_3_5
+#elif UNITY_3_0 || UNITY_3_0_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4 || UNITY_3_5 || UNITY_3_6 || UNITY_3_5_7 || UNITY_3_8
 #define UNITY_3
 #endif
 
@@ -92,16 +90,12 @@ public class DrawEditor : Editor
 #region Window Lifecycle
 
 	[MenuItem("GameObject/Create Other/Polydraw Object &p")]
-	public static void GameObjctInit()
+	[MenuItem("Window/Polydraw/Polydraw Object &p")]
+	public static void MenuCreatePolydrawObject()
 	{
 		CreatePolydrawObject();
 	}
 
-	[MenuItem("Window/Polydraw/Polydraw Object &p")]
-	public static void windowinit()
-	{
-		CreatePolydrawObject();
-	}
 
 	public static void CreatePolydrawObject()
 	{
@@ -226,6 +220,8 @@ public class DrawEditor : Editor
 			EditorGUILayout.PrefixLabel("Snap Enabled");
 			_snapEnabled = EditorGUILayout.Toggle(_snapEnabled);
 		GUILayout.EndHorizontal();
+
+		poly.drawSettings.axis = (Axis)EditorGUILayout.EnumPopup(poly.drawSettings.axis);
 		
 		_snapValue = EditorGUILayout.FloatField("Snap Value", _snapValue);
 
@@ -297,10 +293,20 @@ public class DrawEditor : Editor
 		SceneView sceneView = SceneView.lastActiveSceneView;
 		if(!sceneView) return;
 
-		sceneView.rotation = Quaternion.identity;
 		sceneView.orthographic = true;
+		switch(poly.drawSettings.axis)
+		{
+			case Axis.Forward:
+				sceneView.rotation = Quaternion.identity;
+				break;
 
-		Vector3[] points = poly.transform.ToWorldSpace(poly.points.ToVector3(poly.drawSettings.zPosition));
+			case Axis.Up:
+				sceneView.rotation = Quaternion.Euler(Vector3.right*90f);
+				break;
+		}
+
+
+		Vector3[] points = poly.transform.ToWorldSpace(poly.points.ToVector3(poly.drawSettings.axis, poly.drawSettings.zPosition));
 
 		// listen for shortcuts
 		ShortcutListener(e);
@@ -334,7 +340,7 @@ public class DrawEditor : Editor
 		}
 	}
 
-	public bool DrawInsertPointGUI(Vector3[] points)
+	private bool DrawInsertPointGUI(Vector3[] points)
 	{
 		Handles.BeginGUI();
 
@@ -356,9 +362,9 @@ public class DrawEditor : Editor
 					#endif
 					
 					if(snapEnabled)
-						poly.lastIndex = poly.AddPoint( Round(avg, snapValue), n );
+						poly.lastIndex = poly.AddPoint( Round(avg.ToVector2(poly.drawSettings.axis), snapValue), n );
 					else
-						poly.lastIndex = poly.AddPoint( avg, n );
+						poly.lastIndex = poly.AddPoint( avg.ToVector2(poly.drawSettings.axis), n );
 					
 					Handles.EndGUI();
 					
@@ -407,18 +413,7 @@ public class DrawEditor : Editor
 			
 			if(i == poly.lastIndex)
 			{
-				#if SPIN_SELECTED_INDEX
-				{
-					float ro = Time.realtimeSinceStartup;
-					ro = (ro % 360) * 100f;
-					GUIUtility.RotateAroundPivot(ro, g);
-						GUI.Label(handleRect, HANDLE_ICON_ACTIVE);
-					GUIUtility.RotateAroundPivot(-ro, g);
-				}
-				#else
-					GUI.Label(handleRect, HANDLE_ICON_ACTIVE);
-				#endif
-
+				GUI.Label(handleRect, HANDLE_ICON_ACTIVE);
 
 				if(GUI.Button(new Rect(g.x+10, g.y-40, 25, 25), "", deletePointStyle))
 				{
@@ -502,9 +497,9 @@ public class DrawEditor : Editor
 					#endif
 
 					if(snapEnabled)
-						poly.lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition), snapValue ), insertPoint);
+						poly.lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition).ToVector2(poly.drawSettings.axis), snapValue ), insertPoint);
 					else
-						poly.lastIndex = poly.AddPoint( GetWorldPoint(cam, e.mousePosition), insertPoint);
+						poly.lastIndex = poly.AddPoint( GetWorldPoint(cam, e.mousePosition).ToVector2(poly.drawSettings.axis), insertPoint);
 
 					poly.handleOffset = Vector2.zero;
 					poly.isDraggingPoint = true;
@@ -535,9 +530,9 @@ public class DrawEditor : Editor
 					#endif
 
 					if(snapEnabled)
-						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition + poly.handleOffset), snapValue));
+						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition + poly.handleOffset).ToVector2(poly.drawSettings.axis), snapValue));
 					else
-						poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition + poly.handleOffset));
+						poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition + poly.handleOffset).ToVector2(poly.drawSettings.axis));
 				}
 
 				poly.Refresh();
@@ -624,7 +619,7 @@ public class DrawEditor : Editor
 
 #region Camera Conversions
 
-	private Vector2 GetWorldPoint(Camera cam, Vector2 pos)
+	private Vector3 GetWorldPoint(Camera cam, Vector2 pos)
 	{
 		pos.y = Screen.height - pos.y - SCENEVIEW_HEADER;
 		return cam.ScreenToWorldPoint(pos);

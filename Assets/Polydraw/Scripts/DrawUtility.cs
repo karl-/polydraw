@@ -25,8 +25,6 @@ public static class DrawUtility
 
 		List<Vector2> points = new List<Vector2>(_points);
 
-//		Debug.Log(drawSettings.ToString());
-
 		m = new Mesh();
 		c = new Mesh();
 
@@ -90,7 +88,7 @@ public static class DrawUtility
 		int[] front_indices = tr.Triangulate();
 	   
 		// Create the Vector3 vertices
-		List<Vector3> front_vertices = VerticesWithPoints(points, zOrigin - halfSideLength);
+		List<Vector3> front_vertices = VerticesWithPoints(points, drawSettings.axis, zOrigin - halfSideLength);
 
 		Vector2 avg = Vector3.zero;
 		for(int i = 0; i < points.Count; i++)
@@ -307,12 +305,22 @@ public static class DrawUtility
 	 *	@param _points The user points to convert to world space.  Relative to Draw gameObject.
 	 *	@param _zPosition The Z position to anchor points to.  Not affected by #faceOffset at this point.
 	 */
-	public static List<Vector3> VerticesWithPoints(List<Vector2> _points, float _zPosition)
+	public static List<Vector3> VerticesWithPoints(List<Vector2> _points, Axis axis, float _zPosition)
 	{
 		List<Vector3> v = new List<Vector3>();
-		
-		for(int i = 0; i < _points.Count; i++)
-			v.Add(new Vector3(_points[i].x, _points[i].y, _zPosition));
+			
+		switch(axis)
+		{
+			case Axis.Forward:
+				for(int i = 0; i < _points.Count; i++)
+					v.Add(new Vector3(_points[i].x, _points[i].y, _zPosition));
+				break;	
+
+			case Axis.Up:
+				for(int i = 0; i < _points.Count; i++)
+					v.Add(new Vector3(_points[i].x, _zPosition, _points[i].y));
+				break;	
+		}
 		return v;
 	}
 
