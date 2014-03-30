@@ -1,13 +1,7 @@
-#if !UNITY_2_6 && !UNITY_2_6_1 && !UNITY_3_0 && !UNITY_3_0_0 && !UNITY_3_1 && !UNITY_3_2 && !UNITY_3_3 && !UNITY_3_4 && !UNITY_3_5
-#define UNITY_FOUR
-#endif
-
 using UnityEngine;
 using System.Collections;
 
-#if UNITY_FOUR
 namespace Polydraw {
-#endif
 
 [System.Serializable]
 public class DrawSettings
@@ -15,6 +9,8 @@ public class DrawSettings
 	public DrawSettings()
 	{
 	}
+
+	public Axis			axis;							///< On which axis will this object be created?  (Front, Up, or Right)
 
 	// Textures
 	public Material 	frontMaterial;					///< The frontMaterial to be applied to the front face of the mesh.
@@ -102,6 +98,4 @@ public class DrawSettings
 
 	}
 }
-#if UNITY_FOUR
 }
-#endif

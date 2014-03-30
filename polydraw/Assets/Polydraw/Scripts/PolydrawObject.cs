@@ -72,9 +72,9 @@ public class PolydrawObject : MonoBehaviour
 	public int AddPoint(Vector2 point, int insertPoint)
 	{
 		if(insertPoint < 0 || insertPoint > points.Count-1)
-			points.Add(transform.InverseTransformPoint(point.ToVector3(drawSettings.zPosition)));
+			points.Add(transform.InverseTransformPoint(point.ToVector3(drawSettings.axis, drawSettings.zPosition)).ToVector2(drawSettings.axis));
 		else
-			points.Insert(insertPoint, transform.InverseTransformPoint(point.ToVector3(drawSettings.zPosition)));
+			points.Insert(insertPoint, transform.InverseTransformPoint(point.ToVector3(drawSettings.axis, drawSettings.zPosition)).ToVector2(drawSettings.axis));
 
 		return (insertPoint < 0 || insertPoint > points.Count-1) ? points.Count-1 : insertPoint;
 	}
@@ -82,7 +82,7 @@ public class PolydrawObject : MonoBehaviour
 	public void SetPoint(int index, Vector2 point)
 	{
 		if(index > -1 && index < points.Count)
-			points[index] = transform.InverseTransformPoint(point.ToVector3(drawSettings.zPosition));
+			points[index] = transform.InverseTransformPoint(point.ToVector3(drawSettings.axis, drawSettings.zPosition)).ToVector2(drawSettings.axis);
 	}
 
 	public void RemovePointAtIndex(int index)
