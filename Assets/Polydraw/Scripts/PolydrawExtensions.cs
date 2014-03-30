@@ -9,12 +9,22 @@ public static class PolydrawExtensions
 
 #region Conversion
 
-	public static List<Vector2> ToVector2(this Vector3[] v, Axis axis)
+	public static List<Vector2> ToVector2(this List<Vector3> v, Axis axis)
 	{
 		List<Vector2> p = new List<Vector2>();
-		for(int i = 0; i < v.Length; i++)
+		for(int i = 0; i < v.Count; i++)
 		{
 			p.Add(v[i].ToVector2(axis));
+		}
+		return p;
+	}
+
+	public static Vector2[] ToVector2(this Vector3[] v, Axis axis)
+	{
+		Vector2[] p = new Vector2[v.Length];
+		for(int i = 0; i < v.Length; i++)
+		{
+			p[i] = v[i].ToVector2(axis);
 		}
 		return p;
 	}
@@ -101,7 +111,7 @@ public static class PolydrawExtensions
 		for(int i = 0; i < v.Length; i++)
 			v[i] -= avg;
 
-		poly.points = v.ToVector2(poly.drawSettings.axis);
+		poly.points = new List<Vector2>(v.ToVector2(poly.drawSettings.axis));
 
 		poly.Refresh();
 

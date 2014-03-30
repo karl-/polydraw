@@ -165,10 +165,11 @@ public class DrawEditor : Editor
 
 		// drawStyle = (DrawStyle)EditorGUILayout.EnumPopup("Draw Style", drawStyle);
 		
-		GUI_EditSettings();
 		
 		bool guiChanged = false;
 
+		if(GUI_EditSettings())
+			guiChanged = true;
 		/**
 		 *	\brief Draw Settings
 		 */
@@ -211,9 +212,10 @@ public class DrawEditor : Editor
 
 #region DrawSettings GUI 	// since there are so many settings, this serves as a way to keep the OnGUI function "light"
 
-	private void GUI_EditSettings()
+	private bool GUI_EditSettings()
 	{
 		bool _snapEnabled = snapEnabled;
+		bool changed = false;
 		float _snapValue = snapValue;
 
 		GUILayout.BeginHorizontal();
@@ -221,7 +223,11 @@ public class DrawEditor : Editor
 			_snapEnabled = EditorGUILayout.Toggle(_snapEnabled);
 		GUILayout.EndHorizontal();
 
+		EditorGUI.BeginChangeCheck();
 		poly.drawSettings.axis = (Axis)EditorGUILayout.EnumPopup(poly.drawSettings.axis);
+		if(EditorGUI.EndChangeCheck())
+			changed = true;
+
 		
 		_snapValue = EditorGUILayout.FloatField("Snap Value", _snapValue);
 
@@ -230,6 +236,8 @@ public class DrawEditor : Editor
 
 		if(snapValue != _snapValue)
 			SetSnapValue( _snapValue );
+
+		return changed;
 	}
 
 	private bool GUI_SideSettings()
@@ -302,6 +310,10 @@ public class DrawEditor : Editor
 
 			case Axis.Up:
 				sceneView.rotation = Quaternion.Euler(Vector3.right*90f);
+				break;
+
+			case Axis.Right:
+				sceneView.rotation = Quaternion.Euler(-Vector3.up*90f);
 				break;
 		}
 

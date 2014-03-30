@@ -248,7 +248,7 @@ public class PolydrawObject : MonoBehaviour
 					rota = new Vector3(0f, -angle, 0f);
 					break;
 				case Axis.Right:
-					rota = new Vector3(angle, 0f, 0f);
+					rota = new Vector3(-angle, 0f, 0f);
 					break;
 				default:
 					rota = new Vector3(0f, 0f, angle);
