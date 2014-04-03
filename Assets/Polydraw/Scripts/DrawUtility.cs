@@ -194,7 +194,6 @@ public static class DrawUtility
 			int front = front_vertices.Count;
 
 			Vector3[] nrm = m.normals;
-			Vector3[] vec = m.vertices;
 
 			int len = side_vertices.Count;
 			for(int i = 2; i < len; i+=4)//side_vertices.Count; i+=2)
