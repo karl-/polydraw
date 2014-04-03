@@ -59,6 +59,8 @@ public class DrawEditor : Editor
 	GUIContent gc_anchor = new GUIContent("Pivot", "Determines how the sides will be generated.  Ex: If Front, the pivot of this object will be at the z position and sides will extend back in the positive Z direction.");
 	GUIContent gc_faceOffset = new GUIContent("Pivot Offset", "This value is used to determine where the front of the mesh will begin relative to the z position.  As an example, a value of -1 and a 'Front' pivot will place the front face of the mesh 1m in front of the z position with sides extending backwards towards position z axis.");
 	GUIContent gc_sideLength = new GUIContent("Side Length", "How long the sides will be.");
+	GUIContent gc_smoothAngle = new GUIContent("Smooth Angle", "Edges that form an angle less than this value will have their normals averaged.  Creates a smooth lighting effect.");
+	GUIContent gc_drawNormals = new GUIContent("Draw Normals", "Draws the edge normals in the sceneview.  Does not affect the object at runtime.  Useful when trying to get smooth edges");
 
 	// textures
 
@@ -247,7 +249,19 @@ public class DrawEditor : Editor
 		poly.drawSettings.anchor = (Draw.Anchor)EditorGUILayout.EnumPopup(gc_anchor, poly.drawSettings.anchor);
 		poly.drawSettings.faceOffset = EditorGUILayout.FloatField(gc_faceOffset, poly.drawSettings.faceOffset);
 		poly.drawSettings.sideLength = EditorGUILayout.FloatField(gc_sideLength, poly.drawSettings.sideLength);
-	
+		
+		GUILayout.BeginHorizontal();
+		poly.drawSettings.smoothAngle = EditorGUILayout.FloatField(gc_smoothAngle, poly.drawSettings.smoothAngle, GUILayout.MaxWidth(200));
+		poly.drawSettings.smoothAngle = GUILayout.HorizontalSlider(poly.drawSettings.smoothAngle, 0f, 90f);
+		GUILayout.EndHorizontal();
+		
+		GUILayout.BeginHorizontal();
+		poly.drawSettings.drawNormals = EditorGUILayout.Toggle(gc_drawNormals, poly.drawSettings.drawNormals);
+		if(!poly.drawSettings.drawNormals) GUI.enabled = false;
+		poly.drawSettings.normalLength = Mathf.Clamp(EditorGUILayout.FloatField("Length", poly.drawSettings.normalLength), 0f, 100f);
+		GUI.enabled = true;
+		GUILayout.EndHorizontal();
+
 		return EditorGUI.EndChangeCheck();
 	}
 
@@ -350,6 +364,7 @@ public class DrawEditor : Editor
 			default:
 				break;
 		}
+
 	}
 
 	private bool DrawInsertPointGUI(Vector3[] points)
