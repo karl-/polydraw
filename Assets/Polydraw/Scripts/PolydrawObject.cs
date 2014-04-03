@@ -350,5 +350,19 @@ public class PolydrawObject : MonoBehaviour
 		newRb.maxAngularVelocity	= t_maxAngularVelocity;
 	}
 #endregion
+
+#region Debug
+
+	void OnDrawGizmos()
+	{
+		Mesh msh = GetComponent<MeshFilter>().sharedMesh;
+
+		Vector3[] vec = msh.vertices;
+		Vector3[] nrm = msh.normals;
+
+		for(int i = 0; i < vec.Length; i++)
+			Gizmos.DrawLine(transform.TransformPoint(vec[i]), transform.TransformPoint(vec[i]) + transform.TransformDirection(nrm[i]));
+	}
+#endregion
 }
 }
