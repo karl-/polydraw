@@ -61,7 +61,8 @@ public class DrawSettings
 	public bool 		manualColliderDepth = false;	///< If #ColliderStyle is set to BoxCollider, this can override the #sideLength property to set collision depth.  See also #colDepth.
 	public Draw.Anchor	colAnchor = Draw.Anchor.Center;	///< If #manualColliderDepth is toggled, this value will be used to determine where meshcollider will anchor itself.  \sa #Draw:Anchor
 	public float 		colDepth = 5f;					///< If #manualColliderDepth is toggled, this value will be used to determine depth of colliders.
-
+	public float 		boxColliderSize = .1f;			///< How thick should box colliders generate themselves.
+	
 	// Debug
 	public bool 		drawNormals = false;			///< If true, selected polydraw objects will draw their normals in the SceneView.
 	public float 		normalLength = .3f;				///< If drawNormals == true, this affects the length of the normals.

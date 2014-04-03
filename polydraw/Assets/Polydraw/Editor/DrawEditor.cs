@@ -70,6 +70,7 @@ public class DrawEditor : Editor
 	// collisions
 	GUIContent gc_colDepth = new GUIContent("Collision Depth", "How long depth-wise the mesh collider should be.");
 	GUIContent gc_colAnchor = new GUIContent("Collision Mesh Anchor", "Where should the collision mesh start, and how shoud it align itself?");
+	GUIContent gc_boxColliderSize = new GUIContent("BoxCollider Size", "How thick should box colliders generate themselves.");
 #endregion
 
 #region Convenient
@@ -290,6 +291,12 @@ public class DrawEditor : Editor
 
 		poly.drawSettings.colDepth = EditorGUILayout.FloatField(gc_colDepth, poly.drawSettings.colDepth);
 		poly.drawSettings.colAnchor = (Draw.Anchor)EditorGUILayout.EnumPopup(gc_colAnchor, poly.drawSettings.colAnchor); 
+
+		if(poly.drawSettings.colliderType != Draw.ColliderType.BoxCollider)
+			GUI.enabled = false;
+		poly.drawSettings.boxColliderSize = EditorGUILayout.FloatField(gc_boxColliderSize, poly.drawSettings.boxColliderSize);
+		
+		GUI.enabled = true;
 
 		return EditorGUI.EndChangeCheck();
 	}
