@@ -353,7 +353,7 @@ public class PolydrawObject : MonoBehaviour
 
 #region Debug
 
-	void OnDrawGizmos()
+	void OnDrawGizmosSelected()
 	{
 		if(!drawSettings.drawNormals) return;
 
