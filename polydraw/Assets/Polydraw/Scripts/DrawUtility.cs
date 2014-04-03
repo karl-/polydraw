@@ -196,15 +196,15 @@ public static class DrawUtility
 			Vector3[] nrm = m.normals;
 			Vector3[] vec = m.vertices;
 
-			// Vector3 avgNrm = (nrm[front+2] + nrm[front+4])/2f;
-			// nrm[ front+2 ] = (avgNrm);
-			// nrm[ front+4 ] = (avgNrm);
-
 			int len = side_vertices.Count;
 			for(int i = 2; i < len; i+=4)//side_vertices.Count; i+=2)
 			{
 				int curr = front+i;
 				int next = i >= len-2 ? front : front+i+2;
+
+				float angle = Vector3.Angle(nrm[curr], nrm[next]);
+				if(angle > drawSettings.smoothAngle)
+					continue;
 
 				Vector3 nrmAvg = ((nrm[curr] + nrm[next]) / 2f).normalized;
 				

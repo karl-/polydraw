@@ -355,13 +355,15 @@ public class PolydrawObject : MonoBehaviour
 
 	void OnDrawGizmos()
 	{
+		if(!drawSettings.drawNormals) return;
+
 		Mesh msh = GetComponent<MeshFilter>().sharedMesh;
 
 		Vector3[] vec = msh.vertices;
 		Vector3[] nrm = msh.normals;
 
 		for(int i = 0; i < vec.Length; i++)
-			Gizmos.DrawLine(transform.TransformPoint(vec[i]), transform.TransformPoint(vec[i]) + transform.TransformDirection(nrm[i]));
+			Gizmos.DrawLine(transform.TransformPoint(vec[i]), transform.TransformPoint(vec[i]) + transform.TransformDirection(nrm[i]) * drawSettings.normalLength);	
 	}
 #endregion
 }
