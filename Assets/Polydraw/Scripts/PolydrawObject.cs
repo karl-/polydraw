@@ -192,7 +192,6 @@ public class PolydrawObject : MonoBehaviour
 
 	}
 
-	const float BOX_COLLIDER_SIZE = .1f;
 	private void BuildBoxCollisions()
 	{	
 		float zPos_collider = 0f;
@@ -232,14 +231,16 @@ public class PolydrawObject : MonoBehaviour
 			float x = ((x1+x2)/2f);
 			float y = ((y1+y2)/2f);
 
+			Vector2 perp = new Vector2(-(y2-y1), x2-x1).normalized * (drawSettings.boxColliderSize/2f);
+
 			Vector2 vectorLength = new Vector2( Mathf.Abs(x1 - x2),  Mathf.Abs(y1 - y2) );		
 
 			float length = Mathf.Sqrt( ( Mathf.Pow((float)vectorLength.x, 2f) + Mathf.Pow(vectorLength.y, 2f) ) );
 			float angle = Mathf.Atan2(y2 - y1, x2 - x1) * Mathf.Rad2Deg;
 
-			boxColliderObj.transform.position = new Vector2(x,y).ToVector3(drawSettings.axis, zPos_collider);
+			boxColliderObj.transform.position = (new Vector2(x,y)-perp).ToVector3(drawSettings.axis, zPos_collider);
 			
-			boxColliderObj.transform.localScale = new Vector2(length, BOX_COLLIDER_SIZE).ToVector3(drawSettings.axis, drawSettings.colDepth);
+			boxColliderObj.transform.localScale = new Vector2(length, drawSettings.boxColliderSize).ToVector3(drawSettings.axis, drawSettings.colDepth);
 			
 			Vector3 rota;
 			switch(drawSettings.axis)	
@@ -260,7 +261,7 @@ public class PolydrawObject : MonoBehaviour
 
 			// someday, we should move the collider to the edges.  to do so, they would need to be re-positioned
 			// to account for the new center
-			// boxColliderObj.transform.position += ((BOX_COLLIDER_SIZE/2f) * new Vector3( -(x2-x1), (y2-y1), 0f ).normalized );
+			// boxColliderObj.transform.position += ((drawSettings.boxColliderSize/2f) * new Vector3( -(x2-x1), (y2-y1), 0f ).normalized );
 		}
 	}
 #endregion
