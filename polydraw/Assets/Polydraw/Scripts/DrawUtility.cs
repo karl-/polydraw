@@ -188,6 +188,37 @@ public static class DrawUtility
 		m.RecalculateBounds();
 		m.Optimize();
 
+		// Smooth edge normals
+		if(drawSettings.generateSide)
+		{
+			int front = front_vertices.Count;
+
+			Vector3[] nrm = m.normals;
+			Vector3[] vec = m.vertices;
+
+			// Vector3 avgNrm = (nrm[front+2] + nrm[front+4])/2f;
+			// nrm[ front+2 ] = (avgNrm);
+			// nrm[ front+4 ] = (avgNrm);
+
+			int len = side_vertices.Count;
+			for(int i = 2; i < len; i+=4)//side_vertices.Count; i+=2)
+			{
+				int curr = front+i;
+				int next = i >= len-2 ? front : front+i+2;
+
+				Vector3 nrmAvg = ((nrm[curr] + nrm[next]) / 2f).normalized;
+				
+				nrm[curr] = nrmAvg;
+				nrm[next] = nrmAvg;
+
+				nrm[curr+1] = nrmAvg;
+				nrm[next+1] = nrmAvg;
+
+			}
+
+			m.normals = nrm;
+		}
+
 		c.Clear();
 		c.vertices = collison_vertices.ToArray();
 		c.triangles = side_indices;

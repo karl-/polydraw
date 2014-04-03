@@ -28,6 +28,7 @@ public class DrawSettings
 	public float 		zPosition = 0;					///< The Z position for all vertices.  Z is local to the Draw object, and thus it is recommended that the Draw object remain at world coordinates (0, 0, 0).  By default, this done for you in the Start method.
 	public bool 		requireMinimumArea = false;		///< Polygon must have an area greater than #minimumAreaToDraw in order to be drawn.  Best when used in conjunction with a Continuous point drawing style.
 	public float 		minimumAreaToDraw = 1f;			///< Polygon must have an area greater than this value in order to be drawn.
+	public float 		minimumAngleToSmooth = 20f;		///< Edges where the meeting planes form an angle less than this value will have their normals averaged to create a smooth seam.
 
 	// Edges
 	public bool 		drawEdgePlanes = false;			///< If true, edge planes will be drawn bordering the final mesh.
