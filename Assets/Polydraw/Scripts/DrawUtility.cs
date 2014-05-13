@@ -110,9 +110,8 @@ public static class DrawUtility
 			front_uv[i] = front_uv[i].RotateAroundPoint(avg, drawSettings.uvRotation);
 			front_uv[i] = Vector2.Scale(front_uv[i], drawSettings.uvScale);
 		}
-
 		/*** Finish Front Face ***/
-		
+
 		/*** Generate Sides ***/
 		
 		// For use with graphics mesh
@@ -175,15 +174,60 @@ public static class DrawUtility
 
 		Vector2[] side_uv = CalcSideUVs(side_vertices.ToVector2(drawSettings.axis), drawSettings);
 		m.Clear();
-		m.vertices = drawSettings.generateSide ? front_vertices.Concat(side_vertices).ToArray() : front_vertices.ToArray();
-		if(drawSettings.generateSide) {
-			m.subMeshCount = 2;
+
+		List<Vector3> full_vertices = new List<Vector3>(drawSettings.generateSide ? front_vertices.Concat(side_vertices).ToArray() : front_vertices.ToArray());
+		
+		if(drawSettings.generateBackFace)
+		{
+			List<Vector3> backVerts = points.ToVector3(drawSettings.axis, zOrigin + halfSideLength);
+			full_vertices.AddRange(backVerts);
+		}
+
+		m.vertices = full_vertices.ToArray();
+
+		if(drawSettings.generateSide && drawSettings.generateBackFace)
+		{
+			m.subMeshCount = 3;
+			
 			m.SetTriangles(front_indices, 0);
+	
 			m.SetTriangles(ShiftTriangles(side_indices, front_vertices.Count), 1);
-		} else {
+
+			int[] back_indices = new int[front_indices.Length];
+			System.Array.Copy(front_indices, back_indices, front_indices.Length);
+			System.Array.Reverse(back_indices);
+
+			m.SetTriangles(ShiftTriangles(back_indices, front_vertices.Count + side_vertices.Count), 2);
+		}
+		else if(drawSettings.generateSide || drawSettings.generateBackFace)
+		{
+			m.subMeshCount = 2;
+		
+			m.SetTriangles(front_indices, 0);
+
+			if(drawSettings.generateSide)
+			{
+				m.SetTriangles(ShiftTriangles(side_indices, front_vertices.Count), 1);
+			}
+			else
+			{
+				int[] back_indices = new int[front_indices.Length];
+				System.Array.Copy(front_indices, back_indices, front_indices.Length);
+				System.Array.Reverse(back_indices);
+				m.SetTriangles(ShiftTriangles(back_indices, front_vertices.Count), 1);
+			}
+		}
+		else
+		{
 			m.triangles = front_indices;
 		}
-		m.uv = drawSettings.generateSide ? front_uv.Concat(side_uv).ToArray() : front_uv.ToArray();
+
+		List<Vector2> full_uvs = new List<Vector2>(drawSettings.generateSide ? front_uv.Concat(side_uv).ToArray() : front_uv.ToArray());
+
+		if(drawSettings.generateBackFace)
+			full_uvs.AddRange(front_uv);
+
+		m.uv = full_uvs.ToArray();
 		m.RecalculateNormals();
 		m.RecalculateBounds();
 		m.Optimize();

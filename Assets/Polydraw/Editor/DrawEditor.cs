@@ -99,7 +99,6 @@ public class DrawEditor : Editor
 		CreatePolydrawObject();
 	}
 
-
 	public static void CreatePolydrawObject()
 	{
 		PolydrawObject polydrawObject = PolydrawObject.CreateInstance();
@@ -168,15 +167,20 @@ public class DrawEditor : Editor
 
 		// drawStyle = (DrawStyle)EditorGUILayout.EnumPopup("Draw Style", drawStyle);
 		
-		
 		bool guiChanged = false;
 
 		if(GUI_EditSettings())
 			guiChanged = true;
+		
+		EditorGUI.BeginChangeCheck();
+		poly.drawSettings.generateBackFace = EditorGUILayout.Toggle("Generate Back Face", poly.drawSettings.generateBackFace);
+		
 		/**
 		 *	\brief Draw Settings
 		 */
 		poly.drawSettings.generateSide = EditorGUILayout.Toggle("Generate Sides", poly.drawSettings.generateSide);
+		if(EditorGUI.EndChangeCheck())
+			guiChanged = true;
 
 		poly.t_showSideSettings = EditorGUILayout.Foldout(poly.t_showSideSettings, "Side Settings");
 		if(poly.t_showSideSettings)
@@ -230,7 +234,6 @@ public class DrawEditor : Editor
 		poly.drawSettings.axis = (Axis)EditorGUILayout.EnumPopup(poly.drawSettings.axis);
 		if(EditorGUI.EndChangeCheck())
 			changed = true;
-
 		
 		_snapValue = EditorGUILayout.FloatField("Snap Value", _snapValue);
 

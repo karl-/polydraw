@@ -142,14 +142,32 @@ public class PolydrawObject : MonoBehaviour
 		MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();		
 		if(mr == null) mr = gameObject.AddComponent<MeshRenderer>();
 
-		mr.sharedMaterials = drawSettings.generateSide ? 
-			new Material[] {
-				drawSettings.frontMaterial,
-				drawSettings.sideMaterial
-			} :
-			new Material[] {
-				drawSettings.frontMaterial
-			};
+		if(drawSettings.generateSide && drawSettings.generateBackFace)
+		{
+			mr.sharedMaterials = new Material[] {
+					drawSettings.frontMaterial,
+					drawSettings.sideMaterial,
+					drawSettings.frontMaterial
+				};
+		}	
+		else if(drawSettings.generateSide)
+		{
+			mr.sharedMaterials = new Material[] {
+					drawSettings.frontMaterial,
+					drawSettings.sideMaterial,
+				};
+		}
+		else if(drawSettings.generateBackFace)
+		{
+			mr.sharedMaterials = new Material[] {
+					drawSettings.frontMaterial,
+					drawSettings.frontMaterial
+				};	
+		}
+		else
+		{
+			mr.sharedMaterial = drawSettings.frontMaterial;
+		}
 
 		if(hasRigidbody)
 		{
