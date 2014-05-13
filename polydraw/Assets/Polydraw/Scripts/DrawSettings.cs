@@ -25,6 +25,8 @@ public class DrawSettings
 	public Draw.Anchor 	anchor = Draw.Anchor.Center;	///< Where is the pivot point of this mesh?  See #Anchor for more information.
 	public float 		faceOffset = 0f;				///< This value is used to offset the anchor.  As an example, a faceOffset of 1f with a #zPosition of 0f would set the front face at Vector3(x, y, 1f).  With #SideAnchor Center and a faceOffset of 0, the front face is set to exactly 1/2 negative distance (towards the camera) of sideLength.   
 
+	public bool 		generateBackFace = false;		///< If true, a back face will be generated.
+
 	public float 		zPosition = 0;					///< The Z position for all vertices.  Z is local to the Draw object, and thus it is recommended that the Draw object remain at world coordinates (0, 0, 0).  By default, this done for you in the Start method.
 	public bool 		requireMinimumArea = false;		///< Polygon must have an area greater than #minimumAreaToDraw in order to be drawn.  Best when used in conjunction with a Continuous point drawing style.
 	public float 		minimumAreaToDraw = 1f;			///< Polygon must have an area greater than this value in order to be drawn.
