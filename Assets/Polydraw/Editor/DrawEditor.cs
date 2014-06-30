@@ -218,7 +218,10 @@ public class DrawEditor : Editor
 		poly.drawStyle = (DrawStyle)EditorGUILayout.EnumPopup("Draw Style", poly.drawStyle);
 
 		if(poly.drawStyle == DrawStyle.Continuous)
-			poly.drawSettings.minimumDistanceBetweenPoints = EditorGUILayout.FloatField("Min Distance Between Points", poly.drawSettings.minimumDistanceBetweenPoints);
+		{
+			poly.drawSettings.minimumDistanceBetweenPoints = EditorGUILayout.FloatField(new GUIContent("Min Distance Between Points", "Points will only be added to the polygon if they are this distance from every other point in the shape."), poly.drawSettings.minimumDistanceBetweenPoints);
+			poly.drawSettings.minimumDistanceBetweenPoints = Mathf.Clamp(poly.drawSettings.minimumDistanceBetweenPoints, 0f, 100f);
+		}
 
 		GUILayout.BeginHorizontal();
 			EditorGUILayout.PrefixLabel("Snap Enabled");
