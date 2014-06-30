@@ -166,7 +166,7 @@ public class PolydrawObject : MonoBehaviour
 		}
 		else
 		{
-			mr.sharedMaterial = drawSettings.frontMaterial;
+			mr.sharedMaterials = new Material[] { drawSettings.frontMaterial };
 		}
 
 		if(hasRigidbody)
