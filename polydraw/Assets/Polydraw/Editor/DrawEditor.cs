@@ -37,14 +37,6 @@ public class DrawEditor : Editor
 	private GUIStyle insertIconStyle;
 	private GUIStyle deletePointStyle;
 
-	// draw settings
-	public enum DrawStyle
-	{
-		Continuous,
-		Point
-	};
-
-	private DrawStyle drawStyle = DrawStyle.Point;
 	public int insertPoint = -1;
 
 	private PolydrawObject poly;
@@ -165,8 +157,6 @@ public class DrawEditor : Editor
 
 		GUILayout.Space(5);
 
-		// drawStyle = (DrawStyle)EditorGUILayout.EnumPopup("Draw Style", drawStyle);
-		
 		bool guiChanged = false;
 
 		if(GUI_EditSettings())
@@ -225,13 +215,18 @@ public class DrawEditor : Editor
 		bool changed = false;
 		float _snapValue = snapValue;
 
+		poly.drawStyle = (DrawStyle)EditorGUILayout.EnumPopup("Draw Style", poly.drawStyle);
+
+		if(poly.drawStyle == DrawStyle.Continuous)
+			poly.drawSettings.minimumDistanceBetweenPoints = EditorGUILayout.FloatField("Min Distance Between Points", poly.drawSettings.minimumDistanceBetweenPoints);
+
 		GUILayout.BeginHorizontal();
 			EditorGUILayout.PrefixLabel("Snap Enabled");
 			_snapEnabled = EditorGUILayout.Toggle(_snapEnabled);
 		GUILayout.EndHorizontal();
 
 		EditorGUI.BeginChangeCheck();
-		poly.drawSettings.axis = (Axis)EditorGUILayout.EnumPopup(poly.drawSettings.axis);
+		poly.drawSettings.axis = (Axis)EditorGUILayout.EnumPopup("Axis", poly.drawSettings.axis);
 		if(EditorGUI.EndChangeCheck())
 			changed = true;
 		
@@ -341,7 +336,6 @@ public class DrawEditor : Editor
 				break;
 		}
 
-
 		Vector3[] points = poly.transform.ToWorldSpace(poly.points.ToVector3(poly.drawSettings.axis, poly.drawSettings.zPosition));
 
 		// listen for shortcuts
@@ -363,13 +357,13 @@ public class DrawEditor : Editor
 
 		Tools.current = Tool.None;
 
-		switch(drawStyle)
+		switch(poly.drawStyle)
 		{
 			case DrawStyle.Point:
 				PointDrawStyleInput(sceneView.camera, e, points);
 				break;
 			case DrawStyle.Continuous:
-				ContinuousDrawStyleInput(sceneView.camera, e);
+				ContinuousDrawStyleInput(sceneView.camera, e, points);
 				break;
 			default:
 				break;
@@ -578,9 +572,99 @@ public class DrawEditor : Editor
 		}
 	}
 
-	private void ContinuousDrawStyleInput(Camera cam, Event e)
+	private void ContinuousDrawStyleInput(Camera cam, Event e, Vector3[] points)
 	{
+		if(!e.isMouse) return;
 
+		switch(e.type)
+		{
+			case EventType.MouseDown:
+			{
+				/**
+				 * Check it we're clicking on an existing object
+				 */
+				for(int i = 0; i < points.Length; i++)
+				{
+					Vector2 g = HandleUtility.WorldToGUIPoint(points[i]);
+					Rect handleRect = new Rect(g.x-HANDLE_SIZE/2f, g.y-HANDLE_SIZE/2f, HANDLE_SIZE, HANDLE_SIZE);
+					
+					if(handleRect.Contains(e.mousePosition))
+					{
+						poly.isDraggingPoint = true;
+						poly.lastIndex = i;
+						poly.handleOffset = g-e.mousePosition;
+					}
+				}
+
+				if(!poly.isDraggingPoint)
+				{
+					#if UNITY_4_3
+					Undo.RecordObject(poly, "New Drawn Shape");
+					#else
+					Undo.RegisterUndo(poly, "New Drawn Shape");
+					#endif
+
+					poly.ClearPoints();
+
+					poly.handleOffset = Vector2.zero;
+					// poly.isDraggingPoint = true;
+
+					poly.Refresh();
+					SceneView.RepaintAll();
+				}
+			}
+			break;
+
+			case EventType.MouseUp:
+			{
+				if(!poly.isDraggingPoint)
+					break;
+		
+				poly.isDraggingPoint = false;
+			}
+			break;
+
+			case EventType.MouseDrag:
+
+				if(poly.isDraggingPoint)
+				{
+					#if UNITY_4_3
+					Undo.RecordObject(poly, "Move Point");
+					#else
+					Undo.RegisterUndo(poly, "Move Point");
+					#endif
+
+					if(snapEnabled)
+						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition + poly.handleOffset).ToVector2(poly.drawSettings.axis), snapValue));
+					else
+						poly.SetPoint(poly.lastIndex, GetWorldPoint(cam, e.mousePosition + poly.handleOffset).ToVector2(poly.drawSettings.axis));
+				}
+				else
+				{
+					// drawin' stuff
+					Vector3 newPoint = snapEnabled ? Round( GetWorldPoint(cam, e.mousePosition).ToVector2(poly.drawSettings.axis), snapValue ) : GetWorldPoint(cam, e.mousePosition).ToVector2(poly.drawSettings.axis);
+
+
+					for(int i = 0; i < points.Length; i++)
+						if( Vector3.Distance(newPoint, points[i]) < poly.drawSettings.minimumDistanceBetweenPoints )
+							return;
+	
+					poly.lastIndex = poly.AddPoint(newPoint, insertPoint);
+
+
+					// if(	poly.drawStyle == DrawStyle.ContinuousProximity &&
+					// 	poly.points.Count > 3 && 
+					// 	Vector3.Distance(points[0], newPoint) < poly.drawSettings.minimumDistanceBetweenPoints)
+					// {
+					// 	Debug.Log("dist : "  + Vector3.Distance(points[0], newPoint) );
+					// 	m_ignore = true;
+					// }
+				}
+
+				poly.Refresh();
+				SceneView.RepaintAll();
+			break;
+		}
 	}
 #endregion
 

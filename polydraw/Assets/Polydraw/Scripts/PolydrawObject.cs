@@ -22,6 +22,7 @@ public class PolydrawObject : MonoBehaviour
 
 	public List<Vector2> points = new List<Vector2>();
 	public DrawSettings drawSettings = new DrawSettings();
+	public DrawStyle drawStyle = DrawStyle.Point;
 
 	private bool _isEditable = true;
 	public bool isEditable { get { return _isEditable; } }

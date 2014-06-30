@@ -9,4 +9,14 @@ namespace Polydraw
 		Right,
 		Up
 	}
+
+	/**
+	 * Draw Style used in Editor
+	 */
+	public enum DrawStyle
+	{
+		Point,
+		Continuous
+		// ContinuousProximity
+	}
 }

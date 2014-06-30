@@ -43,6 +43,7 @@ public class DrawSettings
 	public bool 		areaRelativeHeight = false;		///< If true, the #edgeHeight will be multiplied by 1/10th the area value.
 	public float 		minEdgeHeight = .1f;			///< The minimum edge height for a plane.  Only taken into account when #areaRelativeHeight is true.
 	public float 		maxEdgeHeight = 1f;				///< The maximum edge height for a plane.  Only taken into account when #areaRelativeHeight is true.	
+	public float 		minimumDistanceBetweenPoints = .02f; ///< The minimum allowable distance that points may be separated by to generate a new point.
 
 	// Physics
 	public bool 		forceConvex = false;			///< If a MeshCollider is used, this can force the collision bounds to convex.
