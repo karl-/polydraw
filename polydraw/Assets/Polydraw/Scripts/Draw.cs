@@ -69,6 +69,7 @@ public class Draw : MonoBehaviour
 	public enum ColliderType {
 		BoxCollider,					///< A series of thin box colliders will be created around the edge of the final object.  This allows for concave collisions, though may be slightly more prone to "snagging" on objects.  See also #boxColliderSize (only available via scripting interface).
 		MeshCollider,					///< A standard Unity MeshCollider will be applied to this object.  See also #applyRigidbody.
+		PolygonCollider2d,				///< Unity2d polygon collider.
 		None							///< A sphere collider will be applied to the object.  <br />Just kidding.  It does what it sounds like, no collider will be applied to the object.
 	}
 #endregion

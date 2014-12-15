@@ -1,4 +1,4 @@
-PolyDraw documentation available on the official site:
+Polydraw documentation available on the official site:
 
 http://www.paraboxstudios.com/polydraw
 
