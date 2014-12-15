@@ -90,6 +90,23 @@ public static class PolydrawExtensions
 	}
 #endregion
 
+#region Mesh
+
+	public static Mesh CopyCollisionMesh(Mesh InMesh)
+	{
+		if(InMesh == null)
+			return null;
+			
+		Mesh m = new Mesh();
+		m.vertices = InMesh.vertices;
+		m.uv = InMesh.uv;
+		m.triangles = InMesh.triangles;
+		m.normals = InMesh.normals;
+
+		return m;
+	}
+#endregion
+
 #region GameObject 
 
 

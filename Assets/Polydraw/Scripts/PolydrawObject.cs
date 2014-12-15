@@ -2,7 +2,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using Polydraw;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Polydraw {
 
@@ -113,33 +115,15 @@ public class PolydrawObject : MonoBehaviour
 		}
 
 		gameObject.SetMesh(m);
-		bool isTrigger = gameObject.GetComponent<Collider>() == null ? false : gameObject.GetComponent<Collider>().isTrigger;
-		bool isConvex = gameObject.GetComponent<MeshCollider>() == null ? false : gameObject.GetComponent<MeshCollider>().convex;
-		
-		RemoveCollisions();
 
-		Rigidbody oldRigidbody = gameObject.GetComponent<Rigidbody>();
-		bool hasRigidbody = (oldRigidbody != null);
-		if(hasRigidbody) 
+		if(drawSettings.colliderType == Draw.ColliderType.MeshCollider)
 		{
-			CopyRigidbodySettings();
-			DestroyImmediate(gameObject.GetComponent<Rigidbody>());
+			if( GetComponent<PolygonCollider2D>() )
+				DestroyImmediate( GetComponent<PolygonCollider2D>() );
+				
+			gameObject.SetMeshCollider(c);
 		}
 
-		switch(drawSettings.colliderType)
-		{
-			case Draw.ColliderType.MeshCollider:
-				gameObject.SetMeshCollider(c);
-				break;
-			case Draw.ColliderType.BoxCollider:
-				BuildBoxCollisions();
-				DestroyImmediate(c);
-				break;
-			default:
-				DestroyImmediate(c);
-				break;
-		}	
-			
 		MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();		
 		if(mr == null) mr = gameObject.AddComponent<MeshRenderer>();
 
@@ -170,18 +154,11 @@ public class PolydrawObject : MonoBehaviour
 			mr.sharedMaterials = new Material[] { drawSettings.frontMaterial };
 		}
 
-		if(hasRigidbody)
-		{
-			if(!gameObject.GetComponent<Rigidbody>()) gameObject.AddComponent<Rigidbody>();
-			PasteRigidbodySettings();
-		}
-
-		if(gameObject.GetComponent<Collider>())
-		{
-			gameObject.GetComponent<Collider>().isTrigger = isTrigger;
-			if(gameObject.GetComponent<MeshCollider>())
-				gameObject.GetComponent<MeshCollider>().convex = isConvex;
-		}
+#if UNITY_EDITOR
+		UnityEditor.EditorApplication.delayCall += this.RefreshCollisions;
+#else
+		RefreshCollisions();
+#endif
 	}
 
 	public void DestroyMesh()
@@ -196,19 +173,91 @@ public class PolydrawObject : MonoBehaviour
 
 #region collisions
 
+	public void RefreshCollisions()
+	{
+		Mesh c = gameObject.GetComponent<MeshCollider>() ? gameObject.GetComponent<MeshCollider>().sharedMesh : null;
+		c = PolydrawExtensions.CopyCollisionMesh(c);
+
+		bool isTrigger = gameObject.GetComponent<Collider>() == null ? false : gameObject.GetComponent<Collider>().isTrigger;
+		bool isConvex = gameObject.GetComponent<MeshCollider>() == null ? false : gameObject.GetComponent<MeshCollider>().convex;
+		
+		RemoveCollisions();
+
+		Rigidbody oldRigidbody = gameObject.GetComponent<Rigidbody>();
+		bool hasRigidbody = (oldRigidbody != null);
+		if(hasRigidbody) 
+		{
+			CopyRigidbodySettings();
+			DestroyImmediate(gameObject.GetComponent<Rigidbody>());
+		}
+
+		switch(drawSettings.colliderType)
+		{
+			case Draw.ColliderType.MeshCollider:
+				gameObject.SetMeshCollider(c);
+				break;
+			case Draw.ColliderType.BoxCollider:
+				BuildBoxCollisions();
+				if(c != null)
+					DestroyImmediate(c);
+				break;
+			case Draw.ColliderType.PolygonCollider2d:
+				BuildPoly2dCollisions();
+				if(c != null)
+					DestroyImmediate(c);
+				break;
+			default:
+				DestroyImmediate(c);
+				break;
+		}	
+
+
+		if(hasRigidbody)
+		{
+			if(!gameObject.GetComponent<Rigidbody>()) gameObject.AddComponent<Rigidbody>();
+			PasteRigidbodySettings();
+		}
+
+		if(gameObject.GetComponent<Collider>())
+		{
+			gameObject.GetComponent<Collider>().isTrigger = isTrigger;
+			if(gameObject.GetComponent<MeshCollider>())
+				gameObject.GetComponent<MeshCollider>().convex = isConvex;
+		}
+	}
+
+	/**
+	 * Remove all colliders associated with this gameobject.
+	 */
 	private void RemoveCollisions()
 	{
 		Collider[] collisions = gameObject.GetComponents<Collider>();
+		
 		foreach(Collider col in collisions)
 		{
 			if(col.GetType() == typeof(MeshCollider)) DestroyImmediate( ((MeshCollider)col).sharedMesh);
 			DestroyImmediate(col);
 		}
+
+		Collider2D[] collisions2d = gameObject.GetComponents<Collider2D>();
+
+		foreach(Collider2D col2 in collisions2d)
+		{
+			DestroyImmediate(col2);
+		}
+		
 		// remove old box collisions, if any
 		if(transform.childCount > 0)
 			foreach(BoxCollider bc in transform.GetComponentsInChildren<BoxCollider>())
 				DestroyImmediate(bc.gameObject);
 
+	}
+
+	private void BuildPoly2dCollisions()
+	{
+		PolygonCollider2D poly = gameObject.AddComponent<PolygonCollider2D>();
+
+		poly.points = points.ToArray();
 	}
 
 	private void BuildBoxCollisions()
@@ -382,8 +431,18 @@ public class PolydrawObject : MonoBehaviour
 		Vector3[] vec = msh.vertices;
 		Vector3[] nrm = msh.normals;
 
+		Color col = new Color(0f, 0f, 0f, 1f);
+
 		for(int i = 0; i < vec.Length; i++)
+		{
+			col.r = Mathf.Abs(nrm[i].x);
+			col.g = Mathf.Abs(nrm[i].y);
+			col.b = Mathf.Abs(nrm[i].z);
+
+			Gizmos.color = col;
+
 			Gizmos.DrawLine(transform.TransformPoint(vec[i]), transform.TransformPoint(vec[i]) + transform.TransformDirection(nrm[i]) * drawSettings.normalLength);	
+		}
 	}
 #endregion
 }

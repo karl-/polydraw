@@ -290,15 +290,19 @@ public class DrawEditor : Editor
 		
 		poly.drawSettings.colliderType = (Draw.ColliderType)EditorGUILayout.EnumPopup(gc_colliderType, poly.drawSettings.colliderType);
 
-		poly.drawSettings.colDepth = EditorGUILayout.FloatField(gc_colDepth, poly.drawSettings.colDepth);
-		poly.drawSettings.colAnchor = (Draw.Anchor)EditorGUILayout.EnumPopup(gc_colAnchor, poly.drawSettings.colAnchor); 
+		if(poly.drawSettings.colliderType != Draw.ColliderType.PolygonCollider2d)
+		{
+			poly.drawSettings.colDepth = EditorGUILayout.FloatField(gc_colDepth, poly.drawSettings.colDepth);
+			poly.drawSettings.colAnchor = (Draw.Anchor)EditorGUILayout.EnumPopup(gc_colAnchor, poly.drawSettings.colAnchor); 
 
-		if(poly.drawSettings.colliderType != Draw.ColliderType.BoxCollider)
-			GUI.enabled = false;
-		poly.drawSettings.boxColliderSize = EditorGUILayout.FloatField(gc_boxColliderSize, poly.drawSettings.boxColliderSize);
+			if(poly.drawSettings.colliderType != Draw.ColliderType.BoxCollider)
+				GUI.enabled = false;
+
+			poly.drawSettings.boxColliderSize = EditorGUILayout.FloatField(gc_boxColliderSize, poly.drawSettings.boxColliderSize);
+			
+			GUI.enabled = true;
+		}
 		
-		GUI.enabled = true;
-
 		return EditorGUI.EndChangeCheck();
 	}
 #endregion

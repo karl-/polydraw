@@ -1,4 +1,5 @@
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
  
 public class TakeScreenshotInEditor : ScriptableObject
@@ -49,3 +50,4 @@ public class TakeScreenshotInEditor : ScriptableObject
 		AssetDatabase.Refresh();
 	}
 }
+#endif
