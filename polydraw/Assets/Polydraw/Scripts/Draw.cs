@@ -3,7 +3,6 @@
 /// Parabox LLC
 /// Support Email - karl@paraboxstudios.com
 /// paraboxstudios.com
-///	## Version 2.0
 ///
 /// Draws a mesh from user input.
 /// 
@@ -13,10 +12,6 @@
 ///		that a mesh doesn't get it's winding squared away it will fill
 ///		improperly, or not at all.
 /// 
-#if !UNITY_2_6 && !UNITY_2_6_1 && !UNITY_3_0 && !UNITY_3_0_0 && !UNITY_3_1 && !UNITY_3_2 && !UNITY_3_3 && !UNITY_3_4 && !UNITY_3_5
-#define UNITY_FOUR
-#endif
-
 using UnityEngine;
 using System;
 using System.Collections;
@@ -25,10 +20,9 @@ using System.Linq;
 using System.IO;
 using Polydraw;
 
-#if UNITY_FOUR
 namespace Polydraw
 {
-#endif
+
 public class Draw : MonoBehaviour
 {
 
@@ -657,6 +651,12 @@ public class Draw : MonoBehaviour
 				}
 			break;
 
+			case ColliderType.PolygonCollider2d:
+				PolygonCollider2D poly = finalMeshGameObject.AddComponent<PolygonCollider2D>();
+				finalMeshGameObject.AddComponent<Rigidbody2D>();
+				poly.points = _points.ToArray();
+				break;
+
 			default:
 			break;
 
@@ -960,6 +960,4 @@ public class Draw : MonoBehaviour
 	}
 #endregion
 }
-#if UNITY_FOUR
 }
-#endif

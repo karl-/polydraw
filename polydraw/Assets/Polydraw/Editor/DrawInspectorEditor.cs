@@ -64,6 +64,8 @@ class DrawInspectorEditor : Editor {
 				break;
 		}
 
+		script.drawSettings.axis = (Polydraw.Axis)EditorGUILayout.EnumPopup(script.drawSettings.axis);
+
 		script.inputCamera = (Camera)EditorGUILayout.ObjectField(new GUIContent("Input Camera", "The camera that listens for mouse input.  Must be orthographic."), script.inputCamera, typeof(Camera), true);
 
 		GUILayout.Space(5);
