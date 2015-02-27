@@ -6,45 +6,49 @@ using UnityEngine;
 using System.Collections;
 using Polydraw;
 
-public class EventListenerExample : MonoBehaviour
+namespace PolyDraw.Demo
 {
-	public Material[] materialLibrary = new Material[0];
-	int curMatIndex = 0;
 
-	void Start ()
+	public class EventListenerExample : MonoBehaviour
 	{
-		Draw.OnObjectCreated += OnCreatedNewObject;
-		Draw.OnDrawCanceled += OnCanceled;
-		
-		CycleMaterial();
-	}
-	
-	// On creating a new object, cycle through the materials.	
-	void OnCreatedNewObject()
-	{
-		if(materialLibrary == null || materialLibrary.Length < 1)
-			return;
-		
-		CycleMaterial();
-	}
+		public Material[] materialLibrary = new Material[0];
+		int curMatIndex = 0;
 
-	void OnCanceled()
-	{
-		Debug.LogWarning("Polydraw: Points failed self-intersect test!  Cancelling mesh creation.");
-	}
-
-	void Update()
-	{
-		if(Input.GetKeyUp(KeyCode.T))
+		void Start ()
+		{
+			Draw.OnObjectCreated += OnCreatedNewObject;
+			Draw.OnDrawCanceled += OnCanceled;
+			
 			CycleMaterial();
-	}
+		}
+		
+		// On creating a new object, cycle through the materials.	
+		void OnCreatedNewObject()
+		{
+			if(materialLibrary == null || materialLibrary.Length < 1)
+				return;
+			
+			CycleMaterial();
+		}
 
-	void CycleMaterial()
-	{
-		curMatIndex++;
-		if(curMatIndex >= materialLibrary.Length)
-			curMatIndex = 0;
+		void OnCanceled()
+		{
+			Debug.LogWarning("Polydraw: Points failed self-intersect test!  Cancelling mesh creation.");
+		}
 
-		GetComponent<Draw>().SetMaterial(materialLibrary[curMatIndex]);
+		void Update()
+		{
+			if(Input.GetKeyUp(KeyCode.T))
+				CycleMaterial();
+		}
+
+		void CycleMaterial()
+		{
+			curMatIndex++;
+			if(curMatIndex >= materialLibrary.Length)
+				curMatIndex = 0;
+
+			GetComponent<Draw>().SetMaterial(materialLibrary[curMatIndex]);
+		}
 	}
 }
