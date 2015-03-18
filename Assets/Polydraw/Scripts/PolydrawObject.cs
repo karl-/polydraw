@@ -357,8 +357,12 @@ public class PolydrawObject : MonoBehaviour
 	private Quaternion t_rotation;
 	private RigidbodyInterpolation t_interpolation;
 	private int t_solverIterationCount;
+	#if UNITY_5
+	private float t_sleepThreshold;
+	#else
 	private float t_sleepVelocity;
 	private float t_sleepAngularVelocity;
+	#endif
 	private float t_maxAngularVelocity;
 
 	private void CopyRigidbodySettings()
@@ -385,8 +389,12 @@ public class PolydrawObject : MonoBehaviour
 		t_rotation				= oldRb.rotation;
 		t_interpolation			= oldRb.interpolation;
 		t_solverIterationCount	= oldRb.solverIterationCount;
+		#if UNITY_5
+		t_sleepThreshold		= oldRb.sleepThreshold;
+		#else
 		t_sleepVelocity			= oldRb.sleepVelocity;
 		t_sleepAngularVelocity	= oldRb.sleepAngularVelocity;
+		#endif
 		t_maxAngularVelocity	= oldRb.maxAngularVelocity;
 	}
 
@@ -414,8 +422,12 @@ public class PolydrawObject : MonoBehaviour
 		newRb.rotation				= t_rotation;
 		newRb.interpolation			= t_interpolation;
 		newRb.solverIterationCount	= t_solverIterationCount;
+		#if UNITY_5
+		newRb.sleepThreshold		= t_sleepThreshold;
+		#else
 		newRb.sleepVelocity			= t_sleepVelocity;
 		newRb.sleepAngularVelocity	= t_sleepAngularVelocity;
+		#endif
 		newRb.maxAngularVelocity	= t_maxAngularVelocity;
 	}
 #endregion

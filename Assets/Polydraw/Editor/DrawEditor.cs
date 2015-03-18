@@ -1,24 +1,9 @@
-#if UNITY_4_3 || UNITY_4_3_0 || UNITY_4_3_1 || UNITY_4_3_2 || UNITY_4_3_3 || UNITY_4_3_4 || UNITY_4_3_5 || UNITY_4_3_6 || UNITY_4_3_7 || UNITY_4_3_8 || UNITY_4_3_9 || UNITY_4_4 || UNITY_4_4_0 || UNITY_4_4_1 || UNITY_4_4_2 || UNITY_4_4_3 || UNITY_4_4_4 || UNITY_4_4_5 || UNITY_4_4_6 || UNITY_4_4_7 || UNITY_4_4_8 || UNITY_4_4_9 || UNITY_4_5 || UNITY_4_5_0 || UNITY_4_5_1 || UNITY_4_5_2 || UNITY_4_5_3 || UNITY_4_5_4 || UNITY_4_5_5 || UNITY_4_5_6 || UNITY_4_5_7 || UNITY_4_5_8 || UNITY_4_5_9 || UNITY_4_6 || UNITY_4_6_0 || UNITY_4_6_1 || UNITY_4_6_2 || UNITY_4_6_3 || UNITY_4_6_4 || UNITY_4_6_5 || UNITY_4_6_6 || UNITY_4_6_7 || UNITY_4_6_8 || UNITY_4_6_9 || UNITY_4_7 || UNITY_4_7_0 || UNITY_4_7_1 || UNITY_4_7_2 || UNITY_4_7_3 || UNITY_4_7_4 || UNITY_4_7_5 || UNITY_4_7_6 || UNITY_4_7_7 || UNITY_4_7_8 || UNITY_4_7_9 || UNITY_4_8 || UNITY_4_8_0 || UNITY_4_8_1 || UNITY_4_8_2 || UNITY_4_8_3 || UNITY_4_8_4 || UNITY_4_8_5 || UNITY_4_8_6 || UNITY_4_8_7 || UNITY_4_8_8 || UNITY_4_8_9
-#define UNITY_4_3
-#elif UNITY_4_0 || UNITY_4_0_1 || UNITY_4_1 || UNITY_4_2
-#define UNITY_4
-#elif UNITY_3_0 || UNITY_3_0_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4 || UNITY_3_5 || UNITY_3_6 || UNITY_3_5_7 || UNITY_3_8
-#define UNITY_3
-#endif
-
 using UnityEditor;
 using UnityEngine;
 using System;
 using Polydraw;
 using System.Collections;
 using System.Collections.Generic;
-
-// todo 
-//	- undo for points and deleting
-//	- make points relative to transform, not world space.
-//		would allow for moving of objects without screwing
-//		with editing.
-//	- normalize and scale uv options
 
 [CustomEditor(typeof(PolydrawObject))]
 public class DrawEditor : Editor
@@ -107,7 +92,11 @@ public class DrawEditor : Editor
 	[MenuItem("Window/Polydraw/Clean Up Unused Assets")]
 	public static void CleanUp()
 	{
+		#if UNITY_5
+		EditorUtility.UnloadUnusedAssetsImmediate();
+		#else
 		EditorUtility.UnloadUnusedAssets();
+		#endif
 	} 
 
 	private void OnEnable()
@@ -312,14 +301,6 @@ public class DrawEditor : Editor
 	public void OnSceneGUI()
 	{		
 		Event e = Event.current;
-
-		#if !UNITY_4_3
-		if(e.type == EventType.ValidateCommand)
-		{
-			OnValidateCommand(Event.current.commandName);
-			return;
-		}
-		#endif
 		
 		if(poly && !poly.isEditable) return;
 
@@ -393,11 +374,7 @@ public class DrawEditor : Editor
 				Rect handleRect = new Rect(g.x-INSERT_HANDLE_SIZE/2f, g.y-INSERT_HANDLE_SIZE/2f, INSERT_HANDLE_SIZE, INSERT_HANDLE_SIZE);
 				if( GUI.Button(handleRect, "", insertIconStyle))
 				{
-					#if UNITY_4_3
 					Undo.RecordObject( poly, "Add Point" );
-					#else
-					Undo.RegisterUndo( poly, "Add Point" );
-					#endif
 					
 					if(snapEnabled)
 						poly.lastIndex = poly.AddPoint( Round(avg.ToVector2(poly.drawSettings.axis), snapValue), n );
@@ -427,11 +404,7 @@ public class DrawEditor : Editor
 			if(poly.lastIndex < 0)
 				return;
 
-			#if UNITY_4_3
 			Undo.RecordObject(poly, "Delete Point");
-			#else
-			Undo.RegisterUndo(poly, "Delete Point");
-			#endif
 
 			poly.RemovePointAtIndex(poly.lastIndex);
 			poly.Refresh();
@@ -455,11 +428,7 @@ public class DrawEditor : Editor
 
 				if(GUI.Button(new Rect(g.x+10, g.y-40, 25, 25), "", deletePointStyle))
 				{
-					#if UNITY_4_3
 					Undo.RecordObject(poly, "Delete Point");
-					#else
-					Undo.RegisterUndo(poly, "Delete Point");
-					#endif
 
 					poly.RemovePointAtIndex(i);
 					poly.Refresh();
@@ -528,11 +497,7 @@ public class DrawEditor : Editor
 
 				if(!poly.isDraggingPoint)
 				{
-					#if UNITY_4_3
 					Undo.RecordObject(poly, "Add Point");
-					#else
-					Undo.RegisterUndo(poly, "Add Point");
-					#endif
 
 					if(snapEnabled)
 						poly.lastIndex = poly.AddPoint( Round( GetWorldPoint(cam, e.mousePosition).ToVector2(poly.drawSettings.axis), snapValue ), insertPoint);
@@ -561,11 +526,7 @@ public class DrawEditor : Editor
 
 				if(poly.isDraggingPoint)
 				{
-					#if UNITY_4_3
 					Undo.RecordObject(poly, "Move Point");
-					#else
-					Undo.RegisterUndo(poly, "Move Point");
-					#endif
 
 					if(snapEnabled)
 						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition + poly.handleOffset).ToVector2(poly.drawSettings.axis), snapValue));
@@ -605,11 +566,7 @@ public class DrawEditor : Editor
 
 				if(!poly.isDraggingPoint)
 				{
-					#if UNITY_4_3
 					Undo.RecordObject(poly, "New Drawn Shape");
-					#else
-					Undo.RegisterUndo(poly, "New Drawn Shape");
-					#endif
 
 					poly.ClearPoints();
 
@@ -635,11 +592,7 @@ public class DrawEditor : Editor
 
 				if(poly.isDraggingPoint)
 				{
-					#if UNITY_4_3
 					Undo.RecordObject(poly, "Move Point");
-					#else
-					Undo.RegisterUndo(poly, "Move Point");
-					#endif
 
 					if(snapEnabled)
 						poly.SetPoint(poly.lastIndex, Round(GetWorldPoint(cam, e.mousePosition + poly.handleOffset).ToVector2(poly.drawSettings.axis), snapValue));
@@ -676,27 +629,6 @@ public class DrawEditor : Editor
 #endregion
 
 #region Event
-
-#if !UNITY_4_3
-	void OnValidateCommand(string command)
-	{
-		switch(command)
-		{
-			case "UndoRedoPerformed":
-				if(poly)
-				{
-					poly.isDraggingPoint = false;
-					poly.Refresh();
-				}
-				
-				Event.current.Use();
-
-				SceneView.RepaintAll();	
-
-				break;
-		}
-	}
-#endif
 
 	void UndoRedoPerformed()
 	{
