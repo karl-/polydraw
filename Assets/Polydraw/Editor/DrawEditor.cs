@@ -80,10 +80,10 @@ public class DrawEditor : Editor
 	{
 		PolydrawObject polydrawObject = PolydrawObject.CreateInstance();
 
-		polydrawObject.drawSettings.frontMaterial = (Material)Resources.LoadAssetAtPath(
+		polydrawObject.drawSettings.frontMaterial = (Material)AssetDatabase.LoadAssetAtPath(
 			"Assets/Polydraw/Default Textures/Cardboard.mat", typeof(Material));
 		
-		polydrawObject.drawSettings.sideMaterial = (Material)Resources.LoadAssetAtPath(
+		polydrawObject.drawSettings.sideMaterial = (Material)AssetDatabase.LoadAssetAtPath(
 			"Assets/Polydraw/Default Textures/Cardboard Grass.mat", typeof(Material));
 		
 		Selection.activeTransform = polydrawObject.transform;
@@ -101,12 +101,12 @@ public class DrawEditor : Editor
 
 	private void OnEnable()
 	{
-		HANDLE_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Normal.png", typeof(Texture2D));
-		HANDLE_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Active.png", typeof(Texture2D));
-		INSERT_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Active.png", typeof(Texture2D));
-		INSERT_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Normal.png", typeof(Texture2D));
-		DELETE_ICON_ACTIVE = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/DeletePoint-Active.png", typeof(Texture2D));
-		DELETE_ICON_NORMAL = (Texture2D)Resources.LoadAssetAtPath("Assets/Polydraw/Icons/DeletePoint-Normal.png", typeof(Texture2D));
+		HANDLE_ICON_NORMAL = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Normal.png", typeof(Texture2D));
+		HANDLE_ICON_ACTIVE = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Polydraw/Icons/HandleIcon-Active.png", typeof(Texture2D));
+		INSERT_ICON_ACTIVE = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Active.png", typeof(Texture2D));
+		INSERT_ICON_NORMAL = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Polydraw/Icons/InsertPoint-Normal.png", typeof(Texture2D));
+		DELETE_ICON_ACTIVE = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Polydraw/Icons/DeletePoint-Active.png", typeof(Texture2D));
+		DELETE_ICON_NORMAL = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Polydraw/Icons/DeletePoint-Normal.png", typeof(Texture2D));
 
 		insertIconStyle = new GUIStyle();
 		insertIconStyle.normal.background = INSERT_ICON_NORMAL;
