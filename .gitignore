@@ -1,0 +1,9 @@
+Assembly-CSharp-Editor.csproj
+Assembly-CSharp.csproj
+polydraw.sln
+
+Library/*
+Temp/*
+ProjectSettings/*
+
+Assets/AssetStoreTools*
