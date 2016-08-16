@@ -211,7 +211,7 @@ public static class DrawUtility
 			{
 				m.subMeshCount = 1;
 				
-				int len = front_indices.Length, sideVertexCount = side_vertices.Count;
+				int len = front_indices.Length;
 				int full = len * 2;
 				int[] frontBack = new int[full];
 				System.Array.Copy(front_indices, frontBack, len);
