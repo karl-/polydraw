@@ -531,6 +531,7 @@ public class Draw : MonoBehaviour
 		finalMeshGameObject.GetComponent<MeshFilter>().sharedMesh = graphics;
 		finalMeshGameObject.AddComponent<MeshRenderer>();
 
+
 		Material[] mats = (drawSettings.generateSide) ? 
 			new Material[2] { drawSettings.frontMaterial, drawSettings.sideMaterial} :
 			new Material[1] { drawSettings.frontMaterial };

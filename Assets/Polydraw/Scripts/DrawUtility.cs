@@ -11,7 +11,6 @@ public static class DrawUtility
 
 	/**
 	 *	\brief Triangulates userPoints and sets mesh data.
-	 *	This method should not be called directly unless you absolutely need to.  Use DrawPreviewMesh() or DrawFinalMesh() instead.
 	 *	@param m Mesh to be used for graphics.
 	 *	@param c Mesh to be used for collisions.
 	 *	@param convexity The #PolygonType.  Necessary for producing the correct face orientation.
@@ -19,9 +18,8 @@ public static class DrawUtility
 	public static bool MeshWithPoints(List<Vector2> _points, DrawSettings drawSettings, out Mesh m, out Mesh c, out Draw.PolygonType convexity)
 	{
 		// Assumes local space.  Returns graphics mesh in the following submesh order:
-		// 0 - Front face
+		// 0 - Front face / back face (optional)
 		// 1 - Sides (optional)
-		// 2 - Back face (planned)
 
 		List<Vector2> points = new List<Vector2>(_points);
 
@@ -116,6 +114,7 @@ public static class DrawUtility
 		
 		// For use with graphics mesh
 		List<Vector3> side_vertices = new List<Vector3>();
+
 		// For use with collision mesh
 		List<Vector3> collison_vertices = new List<Vector3>();
 		
@@ -150,7 +149,7 @@ public static class DrawUtility
 		for(int i = 0; i < side_indices.Length; i+=6)
 		{			
 			// 0 is for clockwise winding order, anything else is CC
-			if(i%2 != windingOrder)
+			if(i % 2 != windingOrder)
 			{
 				side_indices[i+0] = v;
 				side_indices[i+1] = v + 1;
@@ -187,34 +186,40 @@ public static class DrawUtility
 
 		if(drawSettings.generateSide && drawSettings.generateBackFace)
 		{
-			m.subMeshCount = 3;
+			m.subMeshCount = 2;
 			
-			m.SetTriangles(front_indices, 0);
-	
+			int len = front_indices.Length, sideVertexCount = side_vertices.Count;
+			int full = len * 2;
+			int[] frontBack = new int[full];
+			System.Array.Copy(front_indices, frontBack, len);
+
+			for(int i = 0; i < len; i++)
+				frontBack[(full - 1) - i] = front_indices[i] + sideVertexCount + front_vertices.Count;
+
+			m.SetTriangles(frontBack, 0);
 			m.SetTriangles(ShiftTriangles(side_indices, front_vertices.Count), 1);
-
-			int[] back_indices = new int[front_indices.Length];
-			System.Array.Copy(front_indices, back_indices, front_indices.Length);
-			System.Array.Reverse(back_indices);
-
-			m.SetTriangles(ShiftTriangles(back_indices, front_vertices.Count + side_vertices.Count), 2);
 		}
 		else if(drawSettings.generateSide || drawSettings.generateBackFace)
 		{
-			m.subMeshCount = 2;
-		
-			m.SetTriangles(front_indices, 0);
-
 			if(drawSettings.generateSide)
 			{
+				m.subMeshCount = 2;
+				m.SetTriangles(front_indices, 0);
 				m.SetTriangles(ShiftTriangles(side_indices, front_vertices.Count), 1);
 			}
 			else
 			{
-				int[] back_indices = new int[front_indices.Length];
-				System.Array.Copy(front_indices, back_indices, front_indices.Length);
-				System.Array.Reverse(back_indices);
-				m.SetTriangles(ShiftTriangles(back_indices, front_vertices.Count), 1);
+				m.subMeshCount = 1;
+				
+				int len = front_indices.Length, sideVertexCount = side_vertices.Count;
+				int full = len * 2;
+				int[] frontBack = new int[full];
+				System.Array.Copy(front_indices, frontBack, len);
+
+				for(int i = 0; i < len; i++)
+					frontBack[(full - 1) - i] = front_indices[i] + front_vertices.Count;
+
+				m.SetTriangles(frontBack, 0);
 			}
 		}
 		else

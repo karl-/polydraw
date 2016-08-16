@@ -157,14 +157,15 @@ public static class PolydrawExtensions
 		
 		if(!mc)
 		{
-			go.AddComponent<MeshCollider>().sharedMesh = m;
+			mc = go.AddComponent<MeshCollider>();
 		}
 		else
 		{
 			if(mc.sharedMesh != null)
 				GameObject.DestroyImmediate(mc.sharedMesh);
-			mc.sharedMesh = m;
 		}
+
+		mc.sharedMesh = m;
 	}
 #endregion
 }

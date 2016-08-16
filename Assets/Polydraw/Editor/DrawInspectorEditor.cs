@@ -107,6 +107,8 @@ class DrawInspectorEditor : Editor {
 
 			script.drawSettings.faceOffset = EditorGUILayout.FloatField(new GUIContent("Z Offset", "Allows for custom offsets.  See docs for details."), script.drawSettings.faceOffset);
 
+			script.drawSettings.generateBackFace = EditorGUILayout.Toggle("Generate Back", script.drawSettings.generateBackFace);
+
 			script.drawSettings.generateSide = EditorGUILayout.BeginToggleGroup("Generate Sides", script.drawSettings.generateSide);
 
 				script.drawSettings.sideLength = EditorGUILayout.FloatField("Side Length", script.drawSettings.sideLength);
